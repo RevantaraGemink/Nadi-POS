@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Database Pelanggan - AgriPOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#3f6653",
+                        "on-tertiary-container": "#9fa9a3",
+                        "secondary-fixed": "#a4f792",
+                        "primary-container": "#1b4332",
+                        "on-background": "#161a32",
+                        "surface-container-high": "#e5e6ff",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#89da79",
+                        "inverse-primary": "#a5d0b9",
+                        "on-tertiary-fixed": "#151d1a",
+                        "on-surface-variant": "#414844",
+                        "on-surface": "#161a32",
+                        "outline": "#717973",
+                        "surface": "#fbf8ff",
+                        "surface-container-low": "#f4f2ff",
+                        "error": "#ba1a1a",
+                        "secondary": "#1f6d1a",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#267320",
+                        "surface-container": "#ececff",
+                        "on-primary-fixed-variant": "#274e3d",
+                        "on-primary-fixed": "#002114",
+                        "inverse-surface": "#2b2f48",
+                        "secondary-container": "#a4f792",
+                        "inverse-on-surface": "#f0efff",
+                        "tertiary-fixed-dim": "#bfc9c3",
+                        "on-tertiary-fixed-variant": "#3f4945",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#005303",
+                        "tertiary-fixed": "#dbe5df",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#fbf8ff",
+                        "on-secondary-fixed": "#002201",
+                        "on-primary": "#ffffff",
+                        "background": "#fbf8ff",
+                        "surface-variant": "#dee0ff",
+                        "primary": "#012d1d",
+                        "tertiary": "#1f2825",
+                        "on-primary-container": "#86af99",
+                        "primary-fixed": "#c1ecd4",
+                        "outline-variant": "#c1c8c2",
+                        "tertiary-container": "#353e3a",
+                        "primary-fixed-dim": "#a5d0b9",
+                        "surface-dim": "#d5d8f9",
+                        "on-error": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#dee0ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "margin-page": "24px",
+                        "table-cell-padding": "12px 16px",
+                        "gutter": "16px",
+                        "input-height": "40px"
+                    },
+                    "fontFamily": {
+                        "table-data": ["IBM Plex Sans"],
+                        "status-label": ["IBM Plex Sans"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-lg": ["IBM Plex Sans"],
+                        "body-lg": ["IBM Plex Sans"],
+                        "body-md": ["IBM Plex Sans"],
+                        "headline-md": ["IBM Plex Sans"]
+                    },
+                    "fontSize": {
+                        "table-data": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "status-label": ["13px", { "lineHeight": "16px", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-lg": ["30px", { "lineHeight": "38px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .zebra-row:nth-child(even) {
+            background-color: #f4f2ff; /* surface-container-low */
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="hidden md:flex bg-surface text-primary font-label-caps docked left-0 h-full w-64 border-r border-outline-variant flat no shadows flex-col gap-unit p-4 h-full shrink-0">
+<div class="flex items-center gap-4 mb-8 px-4 mt-4">
+<div class="w-10 h-10 bg-primary-container rounded flex items-center justify-center text-on-primary-container font-headline-md font-bold">A</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">AgriPOS</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant">Agri Retail Management</p>
+</div>
+</div>
+<ul class="flex flex-col gap-2">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-all rounded" href="#">
+<span class="material-symbols-outlined" data-icon="point_of_sale">point_of_sale</span>
+<span>Kasir</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-all rounded" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span>Inventory</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container font-bold rounded-lg scale-95 transition-transform" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span>Pelanggan</span>
+</a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high transition-all rounded" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span>Laporan</span>
+</a>
+</li>
+</ul>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col min-h-screen overflow-hidden">
+<!-- TopAppBar -->
+<header class="bg-surface-container-lowest text-primary font-body-md border-b border-outline-variant flat no shadows flex justify-between items-center w-full px-margin-page h-[64px] shrink-0 md:hidden">
+<div class="flex items-center gap-4">
+<button class="text-primary hover:bg-surface-container-low transition-colors p-2 rounded">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">AgriPOS</h1>
+</div>
+<div class="flex items-center gap-4 text-on-surface-variant">
+<span class="hidden sm:inline">12 Oct 2023</span>
+<span class="font-bold">Budi (Kasir)</span>
+<div class="w-8 h-8 bg-surface-variant rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</div>
+</div>
+</header>
+<header class="hidden md:flex bg-surface-container-lowest text-primary font-body-md border-b border-outline-variant flat no shadows justify-between items-center w-full px-margin-page h-[64px] shrink-0">
+<div class="flex items-center gap-4">
+<h2 class="font-headline-lg text-headline-lg font-bold text-on-surface">Database Pelanggan</h2>
+</div>
+<div class="flex items-center gap-6 text-on-surface-variant">
+<span>12 Oct 2023</span>
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-surface-variant rounded flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</div>
+<span class="font-bold">Budi (Kasir)</span>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<main class="flex-1 overflow-y-auto p-margin-page bg-surface flex flex-col gap-gutter">
+<!-- Actions & Search Bar -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+<div class="relative w-full sm:w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" data-icon="search">search</span>
+<input class="w-full h-input-height pl-10 pr-4 bg-surface-container-lowest border border-outline rounded text-body-md font-body-md text-on-surface focus:outline-none focus:border-primary focus:border-2 transition-all placeholder:text-outline" placeholder="Cari nama atau nomor WhatsApp..." type="text"/>
+</div>
+<button class="flex items-center gap-2 bg-primary text-on-primary px-4 h-input-height rounded font-status-label text-status-label hover:bg-on-primary-fixed-variant transition-colors whitespace-nowrap border-2 border-primary">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+                    Tambah Pelanggan
+                </button>
+</div>
+<!-- Data Table Container -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded overflow-hidden flex-1 flex flex-col">
+<div class="overflow-x-auto flex-1">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container sticky top-0 z-10 border-b border-outline-variant">
+<tr>
+<th class="p-table-cell-padding font-status-label text-status-label text-on-surface-variant w-[250px]">Nama Pelanggan</th>
+<th class="p-table-cell-padding font-status-label text-status-label text-on-surface-variant w-[180px]">WhatsApp</th>
+<th class="p-table-cell-padding font-status-label text-status-label text-on-surface-variant">Alamat</th>
+<th class="p-table-cell-padding font-status-label text-status-label text-on-surface-variant w-[150px]">Terakhir Belanja</th>
+<th class="p-table-cell-padding font-status-label text-status-label text-on-surface-variant text-right w-[150px]">Total Transaksi</th>
+<th class="p-table-cell-padding font-status-label text-status-label text-on-surface-variant text-center w-[80px]">Aksi</th>
+</tr>
+</thead>
+<tbody class="font-table-data text-table-data text-on-surface">
+<tr class="border-b border-outline-variant zebra-row hover:bg-surface-container transition-colors">
+<td class="p-table-cell-padding">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary-fixed text-on-primary-container flex items-center justify-center font-bold">HS</div>
+<div>
+<div class="font-bold">H. Sugito</div>
+<div class="text-xs text-on-surface-variant font-normal">Petani Padi</div>
+</div>
+</div>
+</td>
+<td class="p-table-cell-padding text-on-surface-variant">0812-3456-7890</td>
+<td class="p-table-cell-padding text-on-surface-variant truncate max-w-[200px]" title="Jl. Raya Pertanian No. 12, Desa Makmur, Kec. Subur">Jl. Raya Pertanian No. 12, Desa Makmur...</td>
+<td class="p-table-cell-padding text-on-surface-variant">10 Oct 2023</td>
+<td class="p-table-cell-padding text-right font-bold">Rp 4.500.000</td>
+<td class="p-table-cell-padding text-center">
+<button class="text-primary hover:text-surface-tint p-1 rounded hover:bg-surface-variant transition-colors" title="Lihat Riwayat">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant zebra-row hover:bg-surface-container transition-colors">
+<td class="p-table-cell-padding">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-variant text-on-surface flex items-center justify-center font-bold">WR</div>
+<div>
+<div class="font-bold">Wahyudi (KUD Rukun)</div>
+<div class="text-xs text-on-surface-variant font-normal">Pengecer</div>
+</div>
+</div>
+</td>
+<td class="p-table-cell-padding text-on-surface-variant">0856-7890-1234</td>
+<td class="p-table-cell-padding text-on-surface-variant truncate max-w-[200px]" title="Kios Pasar Induk Blok B4">Kios Pasar Induk Blok B4</td>
+<td class="p-table-cell-padding text-on-surface-variant">12 Oct 2023</td>
+<td class="p-table-cell-padding text-right font-bold">Rp 12.050.000</td>
+<td class="p-table-cell-padding text-center">
+<button class="text-primary hover:text-surface-tint p-1 rounded hover:bg-surface-variant transition-colors" title="Lihat Riwayat">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant zebra-row hover:bg-surface-container transition-colors">
+<td class="p-table-cell-padding">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary-fixed text-on-primary-container flex items-center justify-center font-bold">SM</div>
+<div>
+<div class="font-bold">Siti Maimunah</div>
+<div class="text-xs text-on-surface-variant font-normal">Petani Sayur</div>
+</div>
+</div>
+</td>
+<td class="p-table-cell-padding text-on-surface-variant">0813-5555-4444</td>
+<td class="p-table-cell-padding text-on-surface-variant truncate max-w-[200px]" title="Dusun Krajan RT 02/01">Dusun Krajan RT 02/01</td>
+<td class="p-table-cell-padding text-on-surface-variant">05 Oct 2023</td>
+<td class="p-table-cell-padding text-right font-bold">Rp 850.000</td>
+<td class="p-table-cell-padding text-center">
+<button class="text-primary hover:text-surface-tint p-1 rounded hover:bg-surface-variant transition-colors" title="Lihat Riwayat">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant zebra-row hover:bg-surface-container transition-colors">
+<td class="p-table-cell-padding">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-surface-variant text-on-surface flex items-center justify-center font-bold">BP</div>
+<div>
+<div class="font-bold">Bambang Pamungkas</div>
+<div class="text-xs text-on-surface-variant font-normal">Grosir</div>
+</div>
+</div>
+</td>
+<td class="p-table-cell-padding text-on-surface-variant">0899-1111-2222</td>
+<td class="p-table-cell-padding text-on-surface-variant truncate max-w-[200px]" title="Gudang Barat Simpang Tiga">Gudang Barat Simpang Tiga</td>
+<td class="p-table-cell-padding text-on-surface-variant">01 Oct 2023</td>
+<td class="p-table-cell-padding text-right font-bold">Rp 45.200.000</td>
+<td class="p-table-cell-padding text-center">
+<button class="text-primary hover:text-surface-tint p-1 rounded hover:bg-surface-variant transition-colors" title="Lihat Riwayat">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+</td>
+</tr>
+<tr class="border-b border-outline-variant zebra-row hover:bg-surface-container transition-colors">
+<td class="p-table-cell-padding">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-primary-fixed text-on-primary-container flex items-center justify-center font-bold">AN</div>
+<div>
+<div class="font-bold">Agus Nuryanto</div>
+<div class="text-xs text-on-surface-variant font-normal">Petani Jagung</div>
+</div>
+</div>
+</td>
+<td class="p-table-cell-padding text-on-surface-variant">0821-9988-7766</td>
+<td class="p-table-cell-padding text-on-surface-variant truncate max-w-[200px]" title="Desa Ngadipuro">Desa Ngadipuro</td>
+<td class="p-table-cell-padding text-on-surface-variant">28 Sep 2023</td>
+<td class="p-table-cell-padding text-right font-bold">Rp 2.100.000</td>
+<td class="p-table-cell-padding text-center">
+<button class="text-primary hover:text-surface-tint p-1 rounded hover:bg-surface-variant transition-colors" title="Lihat Riwayat">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination / Footer -->
+<div class="bg-surface-container border-t border-outline-variant p-2 flex justify-between items-center text-sm text-on-surface-variant font-body-md">
+<span class="pl-2">Menampilkan 1-5 dari 120 pelanggan</span>
+<div class="flex gap-1">
+<button class="p-1 w-8 h-8 rounded border border-outline-variant bg-surface-container-lowest text-outline hover:bg-surface-variant transition-colors flex items-center justify-center disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[18px]" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="p-1 w-8 h-8 rounded border border-outline-variant bg-surface-container-lowest text-primary hover:bg-surface-variant transition-colors flex items-center justify-center font-bold">1</button>
+<button class="p-1 w-8 h-8 rounded border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-variant transition-colors flex items-center justify-center">2</button>
+<button class="p-1 w-8 h-8 rounded border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-variant transition-colors flex items-center justify-center">3</button>
+<button class="p-1 w-8 h-8 rounded border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-variant transition-colors flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

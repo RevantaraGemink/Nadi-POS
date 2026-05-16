@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manajemen Inventory &amp; Stok AgriPOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-family: 'Material Symbols Outlined', sans-serif;
+            font-size: 20px;
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Fix for Tailwind scrolling on body */
+        body { margin: 0; height: 100vh; overflow: hidden; }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#3f6653",
+                        "on-tertiary-container": "#9fa9a3",
+                        "secondary-fixed": "#a4f792",
+                        "primary-container": "#1b4332",
+                        "on-background": "#161a32",
+                        "surface-container-high": "#e5e6ff",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#89da79",
+                        "inverse-primary": "#a5d0b9",
+                        "on-tertiary-fixed": "#151d1a",
+                        "on-surface-variant": "#414844",
+                        "on-surface": "#161a32",
+                        "outline": "#717973",
+                        "surface": "#fbf8ff",
+                        "surface-container-low": "#f4f2ff",
+                        "error": "#ba1a1a",
+                        "secondary": "#1f6d1a",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#267320",
+                        "surface-container": "#ececff",
+                        "on-primary-fixed-variant": "#274e3d",
+                        "on-primary-fixed": "#002114",
+                        "inverse-surface": "#2b2f48",
+                        "secondary-container": "#a4f792",
+                        "inverse-on-surface": "#f0efff",
+                        "tertiary-fixed-dim": "#bfc9c3",
+                        "on-tertiary-fixed-variant": "#3f4945",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#005303",
+                        "tertiary-fixed": "#dbe5df",
+                        "error-container": "#ffdad6",
+                        "surface-bright": "#fbf8ff",
+                        "on-secondary-fixed": "#002201",
+                        "on-primary": "#ffffff",
+                        "background": "#fbf8ff",
+                        "surface-variant": "#dee0ff",
+                        "primary": "#012d1d",
+                        "tertiary": "#1f2825",
+                        "on-primary-container": "#86af99",
+                        "primary-fixed": "#c1ecd4",
+                        "outline-variant": "#c1c8c2",
+                        "tertiary-container": "#353e3a",
+                        "primary-fixed-dim": "#a5d0b9",
+                        "surface-dim": "#d5d8f9",
+                        "on-error": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-container-highest": "#dee0ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "margin-page": "24px",
+                        "table-cell-padding": "12px 16px",
+                        "gutter": "16px",
+                        "input-height": "40px"
+                    },
+                    "fontFamily": {
+                        "table-data": ["IBM Plex Sans"],
+                        "status-label": ["IBM Plex Sans"],
+                        "label-caps": ["JetBrains Mono"],
+                        "headline-lg": ["IBM Plex Sans"],
+                        "body-lg": ["IBM Plex Sans"],
+                        "body-md": ["IBM Plex Sans"],
+                        "headline-md": ["IBM Plex Sans"]
+                    },
+                    "fontSize": {
+                        "table-data": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "status-label": ["13px", { "lineHeight": "16px", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-lg": ["30px", { "lineHeight": "38px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface flex flex-col md:flex-row w-full h-full font-body-md text-body-md">
+<!-- SideNavBar (Desktop Only) -->
+<aside class="hidden md:flex flex-col gap-unit p-4 h-full bg-surface dark:bg-background docked left-0 h-full w-64 border-r border-outline-variant dark:border-outline flat no shadows shrink-0 z-20">
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-10 h-10 rounded bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">agriculture</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">AgriPOS</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant">Agri Retail Management</p>
+</div>
+</div>
+<nav class="flex flex-col gap-1 flex-1 font-label-caps text-label-caps">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all hover:scale-95" href="#">
+<span class="material-symbols-outlined">point_of_sale</span>
+<span>Kasir</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary-container dark:bg-primary-container text-on-primary-container dark:text-on-primary-container font-bold rounded-lg transition-transform scale-95 shadow-sm" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span>Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all hover:scale-95" href="#">
+<span class="material-symbols-outlined">groups</span>
+<span>Pelanggan</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest transition-all hover:scale-95" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span>Laporan</span>
+</a>
+</nav>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col h-full overflow-hidden bg-surface-container-lowest">
+<!-- TopAppBar -->
+<header class="bg-surface-container-lowest dark:bg-surface-dim font-body-md text-body-md docked full-width top-0 border-b border-outline-variant dark:border-outline flat no shadows flex justify-between items-center w-full px-margin-page h-input-height z-10 shrink-0">
+<!-- Mobile Menu & Brand -->
+<div class="flex md:hidden items-center gap-3">
+<button class="text-on-surface-variant p-1">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<span class="font-headline-md text-headline-md font-bold text-primary dark:text-primary-fixed">AgriPOS</span>
+</div>
+<!-- Search (Left aligned as per JSON, but pushed slightly right on desktop by sidebar) -->
+<div class="hidden md:flex flex-1 max-w-md items-center">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-1.5 bg-surface-container-low border border-outline-variant rounded focus:border-primary focus:border-2 focus:outline-none font-body-md text-body-md h-[32px]" placeholder="Cari produk atau SKU..." type="text"/>
+</div>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-4 text-on-surface-variant">
+<span class="hidden sm:inline-block font-label-caps text-label-caps bg-surface-container-high px-2 py-1 rounded">12 Oct 2023</span>
+<div class="flex items-center gap-2 border-l border-outline-variant pl-4">
+<span class="material-symbols-outlined">account_circle</span>
+<span class="font-table-data text-table-data text-primary dark:text-primary-fixed font-bold">Budi (Kasir)</span>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="flex-1 overflow-auto p-margin-page bg-surface-container-lowest">
+<!-- Page Header & Actions -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary">Manajemen Stok</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Pantau dan kelola ketersediaan produk agrikultur.</p>
+</div>
+<div class="flex items-center gap-3 w-full sm:w-auto">
+<!-- Filters -->
+<div class="relative hidden sm:block">
+<select class="appearance-none bg-surface border border-outline-variant rounded px-4 py-2 pr-10 font-body-md text-body-md text-on-surface focus:border-primary focus:border-2 focus:outline-none h-input-height">
+<option>Semua Kategori</option>
+<option>Benih</option>
+<option>Pupuk Cair</option>
+<option>Pupuk Padat</option>
+<option>Alat Semprot</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">arrow_drop_down</span>
+</div>
+<!-- Add Button -->
+<button class="bg-primary hover:bg-surface-tint text-on-primary font-table-data text-table-data px-4 py-2 rounded flex items-center justify-center gap-2 h-input-height flex-1 sm:flex-none transition-colors border-2 border-primary">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>Tambah Barang</span>
+</button>
+</div>
+</div>
+<!-- Main Data Table Container (Level 1 Surface) -->
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg overflow-hidden flex flex-col">
+<!-- Table Header -->
+<div class="grid grid-cols-12 bg-surface-container-low border-b border-outline-variant p-table-cell-padding font-label-caps text-label-caps text-on-surface-variant sticky top-0 z-10">
+<div class="col-span-3">Nama Produk</div>
+<div class="col-span-2">Kategori</div>
+<div class="col-span-2 text-right">Harga Pokok</div>
+<div class="col-span-2 text-right">Harga Jual</div>
+<div class="col-span-1 text-center">Stok</div>
+<div class="col-span-2 pl-4">Status</div>
+</div>
+<!-- Table Body -->
+<div class="flex flex-col font-table-data text-table-data">
+<!-- Row 1: Tersedia -->
+<div class="grid grid-cols-12 p-table-cell-padding border-b border-outline-variant items-center bg-surface-container-lowest hover:bg-surface-container-low transition-colors group relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary hidden group-hover:block"></div>
+<div class="col-span-3 font-bold text-on-surface truncate pr-2">Benih Jagung Hibrida Bisi 18</div>
+<div class="col-span-2 text-on-surface-variant">Benih</div>
+<div class="col-span-2 text-right text-on-surface-variant">Rp 75.000</div>
+<div class="col-span-2 text-right text-on-surface font-bold">Rp 85.000</div>
+<div class="col-span-1 text-center text-on-surface">145</div>
+<div class="col-span-2 pl-4">
+<span class="inline-flex items-center px-2 py-1 rounded-sm bg-secondary-fixed text-on-secondary-fixed-variant font-status-label text-status-label">
+                                Tersedia
+                            </span>
+</div>
+</div>
+<!-- Row 2: Hampir Habis -->
+<div class="grid grid-cols-12 p-table-cell-padding border-b border-outline-variant items-center bg-surface-container-lowest hover:bg-surface-container-low transition-colors group relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary hidden group-hover:block"></div>
+<div class="col-span-3 font-bold text-on-surface truncate pr-2">Pupuk NPK Mutiara 16-16-16 (50kg)</div>
+<div class="col-span-2 text-on-surface-variant">Pupuk Padat</div>
+<div class="col-span-2 text-right text-on-surface-variant">Rp 650.000</div>
+<div class="col-span-2 text-right text-on-surface font-bold">Rp 720.000</div>
+<div class="col-span-1 text-center text-on-surface">12</div>
+<div class="col-span-2 pl-4">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded-sm bg-[#fff3cd] text-[#856404] font-status-label text-status-label border border-[#ffeeba]">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+                                Hampir Habis
+                            </span>
+</div>
+</div>
+<!-- Row 3: Tersedia -->
+<div class="grid grid-cols-12 p-table-cell-padding border-b border-outline-variant items-center bg-surface-container-lowest hover:bg-surface-container-low transition-colors group relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary hidden group-hover:block"></div>
+<div class="col-span-3 font-bold text-on-surface truncate pr-2">Roundup 486 SL (1 Liter)</div>
+<div class="col-span-2 text-on-surface-variant">Pupuk Cair</div>
+<div class="col-span-2 text-right text-on-surface-variant">Rp 90.000</div>
+<div class="col-span-2 text-right text-on-surface font-bold">Rp 105.000</div>
+<div class="col-span-1 text-center text-on-surface">88</div>
+<div class="col-span-2 pl-4">
+<span class="inline-flex items-center px-2 py-1 rounded-sm bg-secondary-fixed text-on-secondary-fixed-variant font-status-label text-status-label">
+                                Tersedia
+                            </span>
+</div>
+</div>
+<!-- Row 4: Kosong -->
+<div class="grid grid-cols-12 p-table-cell-padding border-b border-outline-variant items-center bg-error-container/20 hover:bg-error-container/40 transition-colors group relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-error hidden group-hover:block"></div>
+<div class="col-span-3 font-bold text-on-surface truncate pr-2 opacity-70">Sprayer Elektrik CBA 16L</div>
+<div class="col-span-2 text-on-surface-variant opacity-70">Alat Semprot</div>
+<div class="col-span-2 text-right text-on-surface-variant opacity-70">Rp 550.000</div>
+<div class="col-span-2 text-right text-on-surface font-bold opacity-70">Rp 650.000</div>
+<div class="col-span-1 text-center text-error font-bold">0</div>
+<div class="col-span-2 pl-4">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded-sm bg-error text-on-error font-status-label text-status-label">
+<span class="material-symbols-outlined text-[14px]">error</span>
+                                Kosong
+                            </span>
+</div>
+</div>
+<!-- Row 5: Hampir Habis -->
+<div class="grid grid-cols-12 p-table-cell-padding border-b border-outline-variant items-center bg-surface-container-lowest hover:bg-surface-container-low transition-colors group relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary hidden group-hover:block"></div>
+<div class="col-span-3 font-bold text-on-surface truncate pr-2">Urea Non Subsidi (50kg)</div>
+<div class="col-span-2 text-on-surface-variant">Pupuk Padat</div>
+<div class="col-span-2 text-right text-on-surface-variant">Rp 450.000</div>
+<div class="col-span-2 text-right text-on-surface font-bold">Rp 480.000</div>
+<div class="col-span-1 text-center text-on-surface">5</div>
+<div class="col-span-2 pl-4">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded-sm bg-[#fff3cd] text-[#856404] font-status-label text-status-label border border-[#ffeeba]">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+                                Hampir Habis
+                            </span>
+</div>
+</div>
+<!-- Row 6: Tersedia -->
+<div class="grid grid-cols-12 p-table-cell-padding items-center bg-surface-container-lowest hover:bg-surface-container-low transition-colors group relative">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary hidden group-hover:block"></div>
+<div class="col-span-3 font-bold text-on-surface truncate pr-2">Benih Padi Inpari 32 (5kg)</div>
+<div class="col-span-2 text-on-surface-variant">Benih</div>
+<div class="col-span-2 text-right text-on-surface-variant">Rp 60.000</div>
+<div class="col-span-2 text-right text-on-surface font-bold">Rp 70.000</div>
+<div class="col-span-1 text-center text-on-surface">320</div>
+<div class="col-span-2 pl-4">
+<span class="inline-flex items-center px-2 py-1 rounded-sm bg-secondary-fixed text-on-secondary-fixed-variant font-status-label text-status-label">
+                                Tersedia
+                            </span>
+</div>
+</div>
+</div>
+<!-- Pagination Footer -->
+<div class="bg-surface-container border-t border-outline-variant p-3 flex justify-between items-center font-table-data text-table-data text-on-surface-variant">
+<div>Menampilkan 1-6 dari 124 produk</div>
+<div class="flex items-center gap-2">
+<button class="p-1 rounded hover:bg-surface-container-high border border-outline-variant disabled:opacity-50"><span class="material-symbols-outlined">chevron_left</span></button>
+<span class="px-2">Halaman 1 dari 21</span>
+<button class="p-1 rounded hover:bg-surface-container-high border border-outline-variant text-primary"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AgriPOS - Detail Pelanggan &amp; Riwayat Belanja</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-bright": "#fbf8ff",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#151d1a",
+                        "tertiary-fixed-dim": "#bfc9c3",
+                        "on-secondary-fixed-variant": "#005303",
+                        "on-secondary": "#ffffff",
+                        "surface-dim": "#d5d8f9",
+                        "inverse-on-surface": "#f0efff",
+                        "surface": "#fbf8ff",
+                        "primary-fixed-dim": "#a5d0b9",
+                        "primary": "#012d1d",
+                        "surface-container": "#ececff",
+                        "surface-variant": "#dee0ff",
+                        "on-background": "#161a32",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#dee0ff",
+                        "surface-tint": "#3f6653",
+                        "surface-container-low": "#f4f2ff",
+                        "secondary-container": "#a4f792",
+                        "background": "#fbf8ff",
+                        "on-secondary-container": "#267320",
+                        "inverse-primary": "#a5d0b9",
+                        "on-surface-variant": "#414844",
+                        "on-error": "#ffffff",
+                        "primary-container": "#1b4332",
+                        "tertiary": "#1f2825",
+                        "on-primary-fixed": "#002114",
+                        "secondary-fixed-dim": "#89da79",
+                        "outline-variant": "#c1c8c2",
+                        "on-surface": "#161a32",
+                        "surface-container-lowest": "#ffffff",
+                        "outline": "#717973",
+                        "on-tertiary-fixed-variant": "#3f4945",
+                        "tertiary-fixed": "#dbe5df",
+                        "tertiary-container": "#353e3a",
+                        "inverse-surface": "#2b2f48",
+                        "on-tertiary-container": "#9fa9a3",
+                        "on-primary-fixed-variant": "#274e3d",
+                        "secondary-fixed": "#a4f792",
+                        "surface-container-high": "#e5e6ff",
+                        "error-container": "#ffdad6",
+                        "on-primary-container": "#86af99",
+                        "on-secondary-fixed": "#002201",
+                        "primary-fixed": "#c1ecd4",
+                        "secondary": "#1f6d1a",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-page": "24px",
+                        "unit": "4px",
+                        "table-cell-padding": "12px 16px",
+                        "gutter": "16px",
+                        "input-height": "40px"
+                    },
+                    "fontFamily": {
+                        "body-lg": ["IBM Plex Sans"],
+                        "headline-md": ["IBM Plex Sans"],
+                        "headline-lg": ["IBM Plex Sans"],
+                        "body-md": ["IBM Plex Sans"],
+                        "status-label": ["IBM Plex Sans"],
+                        "label-caps": ["JetBrains Mono"],
+                        "table-data": ["IBM Plex Sans"]
+                    },
+                    "fontSize": {
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-lg": ["30px", { "lineHeight": "38px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "status-label": ["13px", { "lineHeight": "16px", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "table-data": ["14px", { "lineHeight": "20px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col gap-unit p-4 h-full docked left-0 w-64 border-r border-outline-variant bg-surface" style="position: fixed; top: 0; bottom: 0;">
+<div class="mb-8 px-2 flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined" data-icon="storefront">storefront</span>
+</div>
+<div>
+<h1 class="font-headline-md text-headline-md font-bold text-primary">AgriPOS</h1>
+<p class="font-label-caps text-label-caps text-on-surface-variant">Agri Retail Management</p>
+</div>
+</div>
+<div class="flex flex-col gap-1 w-full">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all font-label-caps text-label-caps w-full" href="#">
+<span class="material-symbols-outlined" data-icon="point_of_sale">point_of_sale</span>
+<span>Kasir</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all font-label-caps text-label-caps w-full" href="#">
+<span class="material-symbols-outlined" data-icon="inventory_2">inventory_2</span>
+<span>Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-primary-container text-on-primary-container font-bold rounded-lg transition-transform Active: scale-95 font-label-caps text-label-caps w-full" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span>Pelanggan</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-container-high transition-all font-label-caps text-label-caps w-full" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span>Laporan</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-0 md:ml-64 flex flex-col min-h-screen w-full">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-margin-page h-input-height bg-surface-container-lowest border-b border-outline-variant flat no shadows docked full-width top-0 sticky z-10" style="height: 64px;">
+<div class="flex items-center gap-4">
+<button class="md:hidden text-on-surface-variant hover:bg-surface-container-low transition-colors p-2 rounded-full">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" data-icon="search">search</span>
+<input class="h-input-height pl-10 pr-4 rounded bg-surface-container-low border border-outline-variant focus:border-primary focus:border-2 text-body-md font-body-md w-64 outline-none" placeholder="Cari..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<span class="text-body-md font-body-md text-on-surface-variant">12 Oct 2023</span>
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-sm">B</div>
+<span class="text-body-md font-body-md font-bold text-primary">Budi (Kasir)</span>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-margin-page flex-1 flex flex-col gap-gutter max-w-7xl mx-auto w-full">
+<!-- Breadcrumbs / Back Action -->
+<div class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors cursor-pointer w-fit mb-2">
+<span class="material-symbols-outlined text-sm" data-icon="arrow_back">arrow_back</span>
+<span class="font-label-caps text-label-caps">KEMBALI KE DATABASE PELANGGAN</span>
+</div>
+<div class="flex flex-col lg:flex-row gap-gutter">
+<!-- Customer Profile Card -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-6 w-full lg:w-1/3 flex flex-col gap-6 self-start">
+<div class="flex items-center gap-4 border-b border-outline-variant pb-6">
+<div class="w-16 h-16 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center text-2xl font-bold">
+                            HS
+                        </div>
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface">H. Sudirman</h2>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-1 mt-1">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim"></span> Petani Grosir
+                            </p>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-outline">NOMOR WHATSAPP</span>
+<div class="flex items-center gap-2 font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-outline" data-icon="call">call</span>
+                                +62 812-3456-7890
+                            </div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-caps text-label-caps text-outline">ALAMAT</span>
+<div class="flex items-start gap-2 font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-outline mt-1" data-icon="location_on">location_on</span>
+<span>Jl. Raya Pertanian No. 45, Blok C, Desa Sukamakmur, Jawa Barat 40561</span>
+</div>
+</div>
+<div class="flex flex-col gap-1 mt-2">
+<span class="font-label-caps text-label-caps text-outline">TOTAL PEMBELIAN (YTD)</span>
+<span class="font-headline-md text-headline-md text-primary font-bold">Rp 45.250.000</span>
+</div>
+</div>
+<button class="mt-4 w-full h-10 bg-surface-container border-2 border-primary text-primary font-table-data text-table-data font-bold rounded flex items-center justify-center gap-2 hover:bg-surface-variant transition-colors">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+                        Edit Profil
+                    </button>
+</section>
+<!-- Transaction History Table -->
+<section class="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT w-full lg:w-2/3 flex flex-col flex-1 overflow-hidden">
+<div class="p-6 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+<h3 class="font-headline-md text-body-lg font-bold text-on-surface">Riwayat Transaksi</h3>
+<div class="flex items-center gap-2">
+<button class="h-8 px-3 border border-outline-variant rounded flex items-center gap-1 text-on-surface-variant hover:bg-surface-variant transition-colors font-table-data text-table-data bg-surface-container-lowest">
+<span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span>
+                                Filter
+                            </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container text-on-surface-variant font-label-caps text-label-caps border-b border-outline-variant">
+<th class="p-table-cell-padding whitespace-nowrap">ID TRANSAKSI</th>
+<th class="p-table-cell-padding whitespace-nowrap">TANGGAL</th>
+<th class="p-table-cell-padding w-full">ITEM DIBELI</th>
+<th class="p-table-cell-padding whitespace-nowrap text-right">TOTAL BAYAR</th>
+<th class="p-table-cell-padding whitespace-nowrap text-center">AKSI</th>
+</tr>
+</thead>
+<tbody class="font-table-data text-table-data text-on-surface">
+<!-- Row 1 -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors h-12">
+<td class="p-table-cell-padding font-bold text-primary">#TRX-9902</td>
+<td class="p-table-cell-padding text-on-surface-variant">10 Oct 2023</td>
+<td class="p-table-cell-padding">Pupuk Urea 50kg (x10), NPK Phonska (x5)</td>
+<td class="p-table-cell-padding text-right font-bold">Rp 3.500.000</td>
+<td class="p-table-cell-padding text-center">
+<button class="text-primary hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="bg-surface-container-low border-b border-outline-variant hover:bg-surface-container-lowest transition-colors h-12">
+<td class="p-table-cell-padding font-bold text-primary">#TRX-9850</td>
+<td class="p-table-cell-padding text-on-surface-variant">28 Sep 2023</td>
+<td class="p-table-cell-padding">Bibit Padi Inpari 32 (x20), Herbisida Roundup (x2)</td>
+<td class="p-table-cell-padding text-right font-bold">Rp 2.150.000</td>
+<td class="p-table-cell-padding text-center">
+<button class="text-primary hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors h-12">
+<td class="p-table-cell-padding font-bold text-primary">#TRX-9711</td>
+<td class="p-table-cell-padding text-on-surface-variant">15 Sep 2023</td>
+<td class="p-table-cell-padding">Insektisida Regent 50 SC (x5)</td>
+<td class="p-table-cell-padding text-right font-bold">Rp 750.000</td>
+<td class="p-table-cell-padding text-center">
+<button class="text-primary hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="bg-surface-container-low border-b border-outline-variant hover:bg-surface-container-lowest transition-colors h-12">
+<td class="p-table-cell-padding font-bold text-primary">#TRX-9605</td>
+<td class="p-table-cell-padding text-on-surface-variant">02 Sep 2023</td>
+<td class="p-table-cell-padding">Pupuk ZA (x15), SP-36 (x10)</td>
+<td class="p-table-cell-padding text-right font-bold">Rp 4.200.000</td>
+<td class="p-table-cell-padding text-center">
+<button class="text-primary hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors h-12">
+<td class="p-table-cell-padding font-bold text-primary">#TRX-9522</td>
+<td class="p-table-cell-padding text-on-surface-variant">20 Aug 2023</td>
+<td class="p-table-cell-padding">Alat Semprot Hama 16L (x1)</td>
+<td class="p-table-cell-padding text-right font-bold">Rp 450.000</td>
+<td class="p-table-cell-padding text-center">
+<button class="text-primary hover:text-primary-container transition-colors">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-4 border-t border-outline-variant flex justify-between items-center bg-surface-container-lowest text-on-surface-variant font-table-data text-table-data">
+<span>Menampilkan 1-5 dari 24 transaksi</span>
+<div class="flex gap-2">
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-sm" data-icon="chevron_left">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center border border-outline-variant rounded hover:bg-surface-container">
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+</body></html>
