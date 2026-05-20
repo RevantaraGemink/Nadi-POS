@@ -27,6 +27,7 @@ export const transactions = sqliteTable("transactions", {
   description: text("description").notNull(),
   debit: real("debit").notNull().default(0), // Masuk
   credit: real("credit").notNull().default(0), // Keluar
+  customerId: integer("customer_id").references(() => customers.id),
   createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
 });
 

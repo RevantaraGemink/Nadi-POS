@@ -33,15 +33,6 @@ export default function Layout({ children }) {
           <NavLink href="/pelanggan" icon="groups" label="Pelanggan" isActive={isPelanggan} />
           <NavLink href="/laporan" icon="analytics" label="Laporan" isActive={isLaporan} />
         </div>
-        <div className="mt-auto border-t border-outline-variant pt-4 flex items-center gap-3 px-2">
-          <div className="w-8 h-8 rounded-full bg-surface-variant flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-surface-variant">person</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="font-table-data text-table-data">Budi (Kasir)</span>
-            <span className="font-label-caps text-label-caps text-on-surface-variant">Shift Pagi</span>
-          </div>
-        </div>
       </nav>
 
       <div className="flex flex-col flex-grow h-full w-full bg-surface-container-lowest">
@@ -56,13 +47,18 @@ export default function Layout({ children }) {
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <div className="text-on-surface-variant font-table-data text-table-data flex items-center gap-2">
-              <span className="material-symbols-outlined text-sm">calendar_today</span>
-              12 Oct 2023
+            <div className="flex items-center gap-2">
+              <button className="p-1 hover:bg-surface-container rounded-full transition-colors text-on-surface-variant">
+                <span className="material-symbols-outlined text-[20px]">chevron_left</span>
+              </button>
+              <span className="text-on-surface-variant font-medium font-table-data text-table-data">
+                {new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })} | {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false })}
+              </span>
+              <button className="p-1 hover:bg-surface-container rounded-full transition-colors text-on-surface-variant">
+                <span className="material-symbols-outlined text-[20px]">chevron_right</span>
+              </button>
             </div>
-            <button className="p-2 rounded-lg hover:bg-surface-container-low text-on-surface-variant transition-colors">
-              <span className="material-symbols-outlined">settings</span>
-            </button>
+
           </div>
         </header>
 

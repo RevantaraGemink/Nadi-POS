@@ -150,14 +150,35 @@ app.delete('/api/products/:id', async (c) => {
 // --- CUSTOMERS ---
 app.get('/api/customers', async (c) => {
   const { page, limit, offset } = getPaginationParams(c);
-  
-  const [totalRes] = await db.select({ value: count() }).from(customers);
+  const search = c.req.query('search');
+
+  const conditions: any[] = [];
+  if (search) {
+    conditions.push(sql`(${customers.name} LIKE ${'%' + search + '%'} OR ${customers.phone} LIKE ${'%' + search + '%'})`);
+  }
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [totalRes] = await db.select({ value: count() }).from(customers).where(whereClause);
   const total = totalRes.value;
   
-  const data = await db.select().from(customers).limit(limit).offset(offset);
+  const data = await db.select().from(customers).where(whereClause).limit(limit).offset(offset);
+
+  // Enrich with lastTransaction and totalTransactions
+  const enriched = await Promise.all(data.map(async (cust) => {
+    const txStats = await db.select({
+      lastDate: sql<string>`MAX(${transactions.createdAt})`,
+      totalAmount: sql<number>`SUM(${transactions.debit})`,
+    }).from(transactions).where(eq(transactions.customerId, cust.id));
+
+    return {
+      ...cust,
+      lastTransaction: txStats[0]?.lastDate || null,
+      totalTransactions: txStats[0]?.totalAmount || 0,
+    };
+  }));
   
   return c.json({
-    data,
+    data: enriched,
     meta: {
       total,
       page,
@@ -243,6 +264,7 @@ app.post('/api/transactions', async (c) => {
         description: body.description,
         debit: body.debit || 0,
         credit: body.credit || 0,
+        customerId: body.customerId || null,
       }).returning().get();
 
       if (body.items && body.items.length > 0) {

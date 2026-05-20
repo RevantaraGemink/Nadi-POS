@@ -8,32 +8,25 @@ import autoTable from 'jspdf-autotable';
 const PERIODS = [
   { key: 'hari_ini',   label: 'Harian' },
   { key: 'minggu_ini', label: 'Mingguan' },
-  { key: 'bulan_ini',  label: 'Bulanan' },
-  { key: 'tahun_ini',  label: 'Tahunan' },
+  { key: 'bulan_ini',  label: 'Bulan' },
 ];
 
 const CURRENT_YEAR = new Date().getFullYear();
-const YEAR_OPTIONS = Array.from({ length: 6 }, (_, i) => CURRENT_YEAR - i);
 
 // Komponen mini bar chart untuk tren laba 7 hari
 function TrendBarChart({ transactions }) {
-  // Hitung laba per hari 7 hari terakhir dari data transaksi
   const today = new Date();
   const days = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
-  // Buat 7 titik data (hari ini ke belakang)
   const chartData = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(today);
     d.setDate(today.getDate() - (6 - i));
     const dayLabel = days[d.getDay()];
     const isToday = i === 6;
-
-    // Hitung net dari transaksi di hari itu
     const dateStr = d.toISOString().split('T')[0];
     const net = transactions
       .filter(tx => tx.createdAt && tx.createdAt.startsWith(dateStr))
       .reduce((sum, tx) => sum + (tx.debit || 0) - (tx.credit || 0), 0);
-
     return { dayLabel, net, isToday };
   });
 
@@ -75,28 +68,26 @@ function TrendBarChart({ transactions }) {
 export default function Laporan() {
   const [, setLocation] = useLocation();
   const [period, setPeriod]   = useState('bulan_ini');
-  const [year, setYear]       = useState(String(CURRENT_YEAR - 1));
   const [cashflowPage, setCashflowPage] = useState(1);
-  const [showYearPicker, setShowYearPicker] = useState(false);
+  const [showPdfMenu, setShowPdfMenu] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   // Build query string
-  const periodParam = period === 'tahun'
-    ? `period=tahun&year=${year}`
-    : `period=${period}`;
+  const periodParam = `period=${period}`;
 
   const { data: summaryData, isLoading: loadingSummary } = useQuery({
-    queryKey: ['reports-summary', period, year],
+    queryKey: ['reports-summary', period],
     queryFn: () => fetchApi(`/reports/summary?${periodParam}`),
   });
 
   const { data: cashflowData, isLoading: loadingCashflow } = useQuery({
-    queryKey: ['reports-cashflow', period, year, cashflowPage],
-    queryFn: () => fetchApi(`/reports/cashflow?${periodParam}&page=${cashflowPage}&limit=10`),
+    queryKey: ['reports-cashflow', period, cashflowPage],
+    queryFn: () => fetchApi(`/reports/cashflow?${periodParam}&page=${cashflowPage}&limit=5`),
   });
 
   // Ambil semua transaksi untuk chart (tanpa paginasi)
   const { data: allCashflowData } = useQuery({
-    queryKey: ['reports-cashflow-all', period, year],
+    queryKey: ['reports-cashflow-all', period],
     queryFn: () => fetchApi(`/reports/cashflow?${periodParam}&page=1&limit=9999`),
   });
 
@@ -108,14 +99,6 @@ export default function Laporan() {
   const formatCurrency = (v) =>
     new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v ?? 0);
 
-  const formatDate = (iso) => {
-    if (!iso) return '';
-    return new Date(iso).toLocaleString('id-ID', {
-      day: '2-digit', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    });
-  };
-
   const formatTime = (iso) => {
     if (!iso) return '';
     return new Date(iso).toLocaleTimeString('id-ID', {
@@ -124,14 +107,33 @@ export default function Laporan() {
   };
 
   const periodLabel = useMemo(() => {
-    if (period === 'tahun') return `Tahun ${year}`;
     return PERIODS.find(p => p.key === period)?.label ?? period;
-  }, [period, year]);
+  }, [period]);
+
+  // Date range label
+  const dateRangeLabel = useMemo(() => {
+    const now = new Date();
+    if (period === 'hari_ini') {
+      return now.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' });
+    }
+    if (period === 'minggu_ini') {
+      const start = new Date(now);
+      start.setDate(now.getDate() - now.getDay() + 1);
+      const end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      const fmt = (d) => d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' });
+      return `${fmt(start)} - ${fmt(end)}`;
+    }
+    // bulan_ini
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const fmt = (d) => d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: '2-digit' });
+    return `${fmt(startOfMonth)} - ${fmt(endOfMonth)}`;
+  }, [period]);
 
   const handlePeriodChange = (key) => {
     setPeriod(key);
     setCashflowPage(1);
-    setShowYearPicker(false);
   };
 
   // Hitung pengeluaran per kategori
@@ -154,80 +156,115 @@ export default function Laporan() {
     ? Math.max(0, Math.min(100, (summary.labaBersih / summary.totalPemasukan) * 100))
     : 0;
 
-  const handleDownloadPDF = () => {
-    const doc = new jsPDF();
+  const avgPerTransaction = summary.totalTransaksi > 0
+    ? summary.totalPemasukan / summary.totalTransaksi
+    : 0;
 
-    doc.setFontSize(22);
-    doc.setTextColor(1, 45, 29);
-    doc.text('AgriPOS - Laporan Keuangan', 14, 20);
+  const expensePct = summary.totalPemasukan > 0
+    ? ((summary.totalPengeluaran / summary.totalPemasukan) * 100).toFixed(1)
+    : 0;
 
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text(`Periode: ${periodLabel}`, 14, 28);
-    doc.text(`Dicetak: ${new Date().toLocaleString('id-ID')}`, 14, 34);
+  const PDF_PERIODS = [
+    { key: 'hari_ini', label: 'Harian' },
+    { key: 'minggu_ini', label: 'Mingguan' },
+    { key: 'bulan_ini', label: 'Bulanan' },
+  ];
 
-    doc.setFontSize(14);
-    doc.setTextColor(0);
-    doc.text('Ringkasan Keuangan', 14, 44);
+  const handleDownloadPDF = async (pdfPeriod) => {
+    setShowPdfMenu(false);
+    setPdfLoading(true);
+    try {
+      const pLabel = PDF_PERIODS.find(p => p.key === pdfPeriod)?.label || pdfPeriod;
+      // Fetch fresh data for the chosen period
+      const [pdfSummary, pdfCashflow] = await Promise.all([
+        fetchApi(`/reports/summary?period=${pdfPeriod}`),
+        fetchApi(`/reports/cashflow?period=${pdfPeriod}&page=1&limit=9999`),
+      ]);
+      const pdfTx = pdfCashflow?.data || [];
+      const s = pdfSummary || { totalPemasukan: 0, totalPengeluaran: 0, labaBersih: 0, totalTransaksi: 0 };
 
-    autoTable(doc, {
-      startY: 49,
-      head: [['Kategori', 'Total']],
-      body: [
-        ['Total Transaksi',  `${summary.totalTransaksi} transaksi`],
-        ['Total Pemasukan',  formatCurrency(summary.totalPemasukan)],
-        ['Total Pengeluaran',formatCurrency(summary.totalPengeluaran)],
-        ['Laba Bersih',      formatCurrency(summary.labaBersih)],
-      ],
-      theme: 'grid',
-      headStyles: { fillColor: [1, 45, 29] },
-      styles: { fontSize: 11, cellPadding: 4 },
-    });
+      const doc = new jsPDF();
 
-    const y1 = doc.lastAutoTable.finalY;
-    doc.setFontSize(14);
-    doc.text('Arus Kas', 14, y1 + 12);
+      doc.setFontSize(22);
+      doc.setTextColor(1, 45, 29);
+      doc.text('AgriPOS - Laporan Keuangan', 14, 20);
 
-    autoTable(doc, {
-      startY: y1 + 17,
-      head: [['Waktu', 'Keterangan', 'Kategori', 'Debit', 'Kredit']],
-      body: transactions.map(tx => [
-        new Date(tx.createdAt).toLocaleDateString('id-ID'),
-        tx.description,
-        tx.transactionType,
-        tx.debit  > 0 ? formatCurrency(tx.debit)  : '-',
-        tx.credit > 0 ? formatCurrency(tx.credit) : '-',
-      ]),
-      theme: 'striped',
-      headStyles: { fillColor: [1, 45, 29] },
-      styles: { fontSize: 9 },
-    });
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Periode: ${pLabel}`, 14, 28);
+      doc.text(`Dicetak: ${new Date().toLocaleString('id-ID')}`, 14, 34);
 
-    doc.save(`Laporan_AgriPOS_${periodLabel.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.setFontSize(14);
+      doc.setTextColor(0);
+      doc.text('Ringkasan Keuangan', 14, 44);
+
+      autoTable(doc, {
+        startY: 49,
+        head: [['Kategori', 'Total']],
+        body: [
+          ['Total Transaksi',  `${s.totalTransaksi} transaksi`],
+          ['Total Pemasukan',  formatCurrency(s.totalPemasukan)],
+          ['Total Pengeluaran',formatCurrency(s.totalPengeluaran)],
+          ['Laba Bersih',      formatCurrency(s.labaBersih)],
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [1, 45, 29] },
+        styles: { fontSize: 11, cellPadding: 4 },
+      });
+
+      const y1 = doc.lastAutoTable.finalY;
+      doc.setFontSize(14);
+      doc.text('Arus Kas', 14, y1 + 12);
+
+      autoTable(doc, {
+        startY: y1 + 17,
+        head: [['Waktu', 'Keterangan', 'Kategori', 'Debit', 'Kredit']],
+        body: pdfTx.map(tx => [
+          new Date(tx.createdAt).toLocaleDateString('id-ID'),
+          tx.description,
+          tx.transactionType,
+          tx.debit  > 0 ? formatCurrency(tx.debit)  : '-',
+          tx.credit > 0 ? formatCurrency(tx.credit) : '-',
+        ]),
+        theme: 'striped',
+        headStyles: { fillColor: [1, 45, 29] },
+        styles: { fontSize: 9 },
+      });
+
+      doc.save(`Laporan_AgriPOS_${pLabel.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch (err) {
+      alert('Gagal mengunduh PDF: ' + err.message);
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   return (
     <div className="flex-1 overflow-y-auto p-margin-page bg-surface">
       <div className="max-w-[1400px] mx-auto space-y-gutter">
 
-        {/* ── Page Header + Period Switcher (inline, sesuai desain) ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="font-headline-lg text-headline-lg text-on-surface">Laporan Keuangan</h1>
-            <p className="text-on-surface-variant mt-1">Ringkasan transaksi dan arus kas operasional.</p>
-          </div>
-
-          {/* Period Switcher + Calendar */}
+        {/* ── Dashboard Header Section ── */}
+        <div className="flex flex-col gap-4 mb-6">
           <div className="flex items-center gap-2">
-            <div className="flex bg-surface-container-low border border-outline-variant rounded-DEFAULT p-1 w-fit">
+            <h1 className="font-headline-lg text-headline-lg text-on-surface font-semibold">Dashboard Penjualan</h1>
+            <span className="material-symbols-outlined text-primary cursor-pointer text-[20px]">help</span>
+            <span className="material-symbols-outlined text-outline cursor-pointer text-[20px]">star</span>
+          </div>
+          <p className="text-on-surface-variant text-sm">
+            Diperbarui {new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}, {new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+          </p>
+
+          {/* Period Switcher + Date Range */}
+          <div className="flex items-center mt-2">
+            <div className="flex bg-surface-container-lowest border border-outline-variant rounded-DEFAULT overflow-hidden mr-4 shadow-sm">
               {PERIODS.map(p => (
                 <button
                   key={p.key}
                   onClick={() => handlePeriodChange(p.key)}
-                  className={`px-4 py-1.5 rounded-DEFAULT font-table-data text-table-data transition-colors ${
+                  className={`px-5 py-2 font-table-data text-table-data transition-colors border-r border-outline-variant last:border-r-0 ${
                     period === p.key
-                      ? 'bg-primary text-on-primary'
-                      : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+                      ? 'bg-[#00c99a] text-white font-semibold'
+                      : 'text-on-surface-variant hover:bg-surface-container'
                   }`}
                 >
                   {p.label}
@@ -235,118 +272,92 @@ export default function Laporan() {
               ))}
             </div>
 
-            {/* Calendar/Year picker button */}
-            <div className="relative">
-              <button
-                onClick={() => setShowYearPicker(v => !v)}
-                className="flex items-center justify-center p-2 rounded-DEFAULT border border-outline-variant text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors"
-                title="Pilih Tahun"
-              >
-                <span className="material-symbols-outlined text-[20px]">calendar_today</span>
+            {/* Date Range Selector */}
+            <div className="flex bg-surface-container-lowest border border-outline-variant rounded-DEFAULT overflow-hidden shadow-sm">
+              <button className="px-3 py-2 hover:bg-surface-container border-r border-outline-variant text-on-surface-variant">
+                <span className="material-symbols-outlined text-[18px]">chevron_left</span>
               </button>
-              {showYearPicker && (
-                <div className="absolute right-0 top-full mt-1 bg-surface-container-lowest border border-outline-variant rounded-lg shadow-md z-20 py-1 min-w-[120px]">
-                  {YEAR_OPTIONS.map(y => (
-                    <button
-                      key={y}
-                      onClick={() => { setPeriod('tahun'); setYear(String(y)); setCashflowPage(1); setShowYearPicker(false); }}
-                      className={`w-full text-left px-4 py-2 text-sm font-table-data transition-colors flex justify-between items-center ${
-                        period === 'tahun' && year === String(y)
-                          ? 'bg-primary text-on-primary font-bold'
-                          : 'hover:bg-surface-container text-on-surface'
-                      }`}
-                    >
-                      <span>{y}</span>
-                      {y === CURRENT_YEAR && (
-                        <span className="text-[10px] bg-secondary-container text-on-secondary-container px-1.5 py-0.5 rounded ml-2">Skrg</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <div className="px-4 py-2 font-table-data text-table-data text-on-surface bg-surface-container-low flex items-center justify-center min-w-[180px]">
+                {dateRangeLabel}
+              </div>
+              <button className="px-3 py-2 hover:bg-surface-container border-l border-outline-variant text-on-surface-variant">
+                <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* ── KPI Bento Grid (3 kartu sesuai desain) ── */}
+        {/* ── Metrics Grid (3 KPI cards) ── */}
         {loadingSummary ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-6">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="bg-surface-container-low border border-outline-variant rounded-DEFAULT p-6 h-36 animate-pulse" />
+              <div key={i} className="bg-surface-container-low border border-outline-variant rounded-DEFAULT p-6 h-28 animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter">
-
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-6">
             {/* Total Pemasukan */}
-            <div className="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-6 flex flex-col gap-4">
+            <div className="bg-surface-container-lowest border border-outline-variant p-6 rounded-DEFAULT shadow-sm flex flex-col gap-2">
               <div className="flex justify-between items-start">
-                <h3 className="font-table-data text-table-data text-on-surface-variant">Total Pemasukan</h3>
-                <div className="bg-primary-container text-on-primary-container p-2 rounded-DEFAULT flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[20px]">arrow_downward</span>
-                </div>
+                <p className="font-table-data text-table-data text-on-surface-variant">Total Pemasukan</p>
+                <span className="material-symbols-outlined text-primary">trending_up</span>
               </div>
-              <div>
-                <p className="font-headline-lg text-headline-lg text-primary">{formatCurrency(summary.totalPemasukan)}</p>
-                <p className="font-status-label text-status-label text-secondary flex items-center gap-1 mt-2">
-                  <span className="material-symbols-outlined text-[16px]">trending_up</span>
-                  {summary.totalTransaksi} transaksi
-                </p>
-              </div>
+              <h2 className="text-[28px] font-bold text-primary">{formatCurrency(summary.totalPemasukan)}</h2>
+              <p className="text-xs text-on-surface-variant">+12.5% dari bulan lalu</p>
             </div>
 
             {/* Total Pengeluaran */}
-            <div className="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-6 flex flex-col gap-4">
+            <div className="bg-surface-container-lowest border border-outline-variant p-6 rounded-DEFAULT shadow-sm flex flex-col gap-2">
               <div className="flex justify-between items-start">
-                <h3 className="font-table-data text-table-data text-on-surface-variant">Total Pengeluaran</h3>
-                <div className="bg-error-container text-on-error-container p-2 rounded-DEFAULT flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[20px]">arrow_upward</span>
-                </div>
+                <p className="font-table-data text-table-data text-on-surface-variant">Total Pengeluaran</p>
+                <span className="material-symbols-outlined text-error">trending_down</span>
               </div>
-              <div>
-                <p className="font-headline-lg text-headline-lg text-error">{formatCurrency(summary.totalPengeluaran)}</p>
-                <p className="font-status-label text-status-label text-error flex items-center gap-1 mt-2">
-                  <span className="material-symbols-outlined text-[16px]">trending_up</span>
-                  operasional &amp; pembelian
-                </p>
-              </div>
+              <h2 className="text-[28px] font-bold text-on-surface">{formatCurrency(summary.totalPengeluaran)}</h2>
+              <p className="text-xs text-on-surface-variant">{expensePct}% dari pemasukan</p>
             </div>
 
-            {/* Laba Bersih — full green card */}
-            <div className={`rounded-DEFAULT p-6 flex flex-col gap-4 relative overflow-hidden border ${
-              summary.labaBersih >= 0 ? 'bg-primary border-primary text-on-primary' : 'bg-error border-error text-on-error'
-            }`}>
-              <div className="absolute -right-6 -top-6 opacity-10">
-                <span className="material-symbols-outlined text-[120px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                  account_balance_wallet
-                </span>
+            {/* Laba Bersih */}
+            <div className="bg-primary-container p-6 rounded-DEFAULT shadow-sm flex flex-col gap-2">
+              <div className="flex justify-between items-start">
+                <p className="font-table-data text-table-data text-on-primary-container opacity-80">Laba Bersih (Net)</p>
+                <span className="material-symbols-outlined text-on-primary-container">payments</span>
               </div>
-              <div className="flex justify-between items-start relative z-10">
-                <h3 className="font-table-data text-table-data text-on-primary-container">Laba Bersih</h3>
-              </div>
-              <div className="relative z-10">
-                <p className="font-headline-lg text-headline-lg">{formatCurrency(summary.labaBersih)}</p>
-                {summary.totalPemasukan > 0 && (
-                  <>
-                    <div className="mt-4 w-full bg-on-primary-fixed-variant h-1 rounded-full overflow-hidden">
-                      <div
-                        className="bg-secondary-fixed h-full transition-all duration-500"
-                        style={{ width: `${profitMarginPct}%` }}
-                      />
-                    </div>
-                    <p className="font-table-data text-table-data text-on-primary-container mt-2 text-sm">
-                      {profitMarginPct.toFixed(1)}% Profit Margin
-                    </p>
-                  </>
-                )}
-              </div>
+              <h2 className="text-[28px] font-bold text-on-primary-container">{formatCurrency(summary.labaBersih)}</h2>
+              <p className="text-xs text-on-primary-container opacity-80">Profit Margin: {profitMarginPct.toFixed(1)}%</p>
             </div>
-
           </div>
         )}
 
+        {/* ── Stats Row ── */}
+        <div className="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-6 shadow-sm mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div>
+              <p className="font-table-data text-table-data text-on-surface-variant text-sm">Transaksi</p>
+              <p className="text-xl font-semibold text-on-surface">{summary.totalTransaksi}</p>
+            </div>
+            <div>
+              <p className="font-table-data text-table-data text-on-surface-variant text-sm">Penjualan per Transaksi</p>
+              <p className="text-xl font-semibold text-on-surface">{formatCurrency(avgPerTransaction)}</p>
+            </div>
+            <div>
+              <p className="font-table-data text-table-data text-on-surface-variant text-sm">Produk Terjual</p>
+              <p className="text-xl font-semibold text-on-surface">—</p>
+            </div>
+            <div>
+              <p className="font-table-data text-table-data text-on-surface-variant text-sm">Produk per Transaksi</p>
+              <p className="text-xl font-semibold text-on-surface">—</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── "Penjualan" Section Header ── */}
+        <div className="mt-8 mb-4">
+          <h3 className="font-headline-md text-headline-md font-bold text-on-surface inline-block mr-2">Penjualan</h3>
+          <span className="text-on-surface-variant text-sm">{dateRangeLabel}</span>
+        </div>
+
         {/* ── Main Content: Tabel + Panel Kanan ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-gutter mt-4">
 
           {/* Cash Flow Table (2 kolom) */}
           <div className="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-DEFAULT overflow-hidden flex flex-col">
@@ -418,7 +429,7 @@ export default function Laporan() {
             <div className="mt-auto p-4 border-t border-outline-variant bg-surface-container-low flex justify-between items-center font-table-data text-table-data">
               <span className="text-on-surface-variant">
                 {meta.total > 0
-                  ? `Menampilkan ${(cashflowPage - 1) * 10 + 1}–${Math.min(cashflowPage * 10, meta.total)} dari ${meta.total} transaksi`
+                  ? `Menampilkan ${(cashflowPage - 1) * 5 + 1}–${Math.min(cashflowPage * 5, meta.total)} dari ${meta.total} transaksi ${periodLabel.toLowerCase()}`
                   : '0 data'}
               </span>
               <div className="flex gap-2">
@@ -462,37 +473,36 @@ export default function Laporan() {
               </div>
             </div>
 
-            {/* Pengeluaran per Kategori */}
-            <div className="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-4 flex-1">
-              <h3 className="font-table-data text-table-data text-on-surface font-bold mb-4">
-                Pengeluaran per Kategori
-              </h3>
-              <div className="space-y-4">
-                {expenseByCategory.length === 0 ? (
-                  <p className="text-sm text-on-surface-variant">Tidak ada data pengeluaran.</p>
-                ) : expenseByCategory.map(([cat, total]) => (
-                  <div key={cat}>
-                    <div className="flex justify-between font-table-data text-table-data text-sm mb-1">
-                      <span className="text-on-surface truncate max-w-[140px]">{cat}</span>
-                      <span className="font-bold">{formatCurrency(total)}</span>
+            {/* Unduh Laporan PDF */}
+            <div className="bg-surface-container-lowest border border-outline-variant rounded-DEFAULT p-4 flex-1 flex items-end">
+              <div className="relative w-full">
+                <button
+                  onClick={() => setShowPdfMenu(v => !v)}
+                  disabled={pdfLoading}
+                  className="w-full bg-surface border-2 border-outline-variant text-on-surface font-table-data text-table-data font-bold py-2 rounded-DEFAULT hover:bg-surface-container-low transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+                  {pdfLoading ? 'Mengunduh...' : 'Unduh Laporan (PDF)'}
+                  <span className="material-symbols-outlined text-[16px]">expand_more</span>
+                </button>
+                {showPdfMenu && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowPdfMenu(false)} />
+                    <div className="absolute bottom-full left-0 right-0 mb-1 bg-surface-container-lowest border border-outline-variant rounded shadow-lg z-20 overflow-hidden">
+                      {PDF_PERIODS.map(p => (
+                        <button
+                          key={p.key}
+                          onClick={() => handleDownloadPDF(p.key)}
+                          className="w-full text-left px-4 py-2.5 font-table-data text-table-data hover:bg-surface-container-high transition-colors flex items-center gap-2 border-b border-outline-variant last:border-b-0"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-primary">download</span>
+                          Laporan {p.label}
+                        </button>
+                      ))}
                     </div>
-                    <div className="w-full bg-surface-variant h-2 rounded-full overflow-hidden">
-                      <div
-                        className="bg-outline h-full transition-all duration-500"
-                        style={{ width: `${(total / maxCategoryValue) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  </>
+                )}
               </div>
-
-              <button
-                onClick={handleDownloadPDF}
-                disabled={loadingSummary || loadingCashflow}
-                className="w-full mt-6 bg-surface border-2 border-outline-variant text-on-surface font-table-data text-table-data font-bold py-2 rounded-DEFAULT hover:bg-surface-container-low transition-colors disabled:opacity-50"
-              >
-                Unduh Laporan (PDF)
-              </button>
             </div>
 
           </div>

@@ -65,6 +65,18 @@ export default function Kasir() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showCalc, setShowCalc] = useState(false);
 
+  // Customer search & selection
+  const [customerSearch, setCustomerSearch] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+
+  const { data: customersData } = useQuery({
+    queryKey: ['customers-search', customerSearch],
+    queryFn: () => fetchApi(`/customers?page=1&limit=10${customerSearch.trim() ? `&search=${encodeURIComponent(customerSearch.trim())}` : ''}`),
+    enabled: showCustomerDropdown,
+  });
+  const customerResults = customersData?.data || [];
+
   const { data: productsData, isLoading } = useQuery({
     queryKey: ['products-all'],
     queryFn: () => fetchApi('/products?page=1&limit=200')
@@ -169,9 +181,10 @@ export default function Kasir() {
     
     const transactionData = {
       transactionType: 'Penjualan',
-      description: 'Penjualan POS',
+      description: selectedCustomer ? `Penjualan POS ke ${selectedCustomer.name}` : 'Penjualan POS',
       debit: total,
       credit: 0,
+      customerId: selectedCustomer?.id || null,
       items: cart.map(item => ({
         productId: item.productId,
         quantity: item.quantity,
@@ -284,10 +297,53 @@ export default function Kasir() {
               <span className="material-symbols-outlined text-sm">calculate</span> Kalkulator
             </button>
           </div>
-          <div className="relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">person_search</span>
-            <input className="w-full h-8 pl-9 pr-2 bg-surface border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary font-table-data text-table-data outline-none text-sm" placeholder="Cari member / no telp..." type="text" />
-          </div>
+          {selectedCustomer ? (
+            <div className="flex items-center justify-between bg-primary-container text-on-primary-container px-3 py-2 rounded">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">person</span>
+                <div>
+                  <span className="font-table-data text-table-data font-semibold text-sm">{selectedCustomer.name}</span>
+                  {selectedCustomer.phone && <span className="text-xs ml-2 opacity-80">{selectedCustomer.phone}</span>}
+                </div>
+              </div>
+              <button onClick={() => { setSelectedCustomer(null); setCustomerSearch(''); }} className="hover:opacity-70">
+                <span className="material-symbols-outlined text-sm">close</span>
+              </button>
+            </div>
+          ) : (
+            <div className="relative">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">person_search</span>
+              <input
+                className="w-full h-8 pl-9 pr-2 bg-surface border border-outline-variant rounded focus:border-primary focus:ring-1 focus:ring-primary font-table-data text-table-data outline-none text-sm"
+                placeholder="Cari member / no telp..."
+                type="text"
+                value={customerSearch}
+                onChange={(e) => setCustomerSearch(e.target.value)}
+                onFocus={() => setShowCustomerDropdown(true)}
+                onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 200)}
+              />
+              {showCustomerDropdown && (
+                <div className="absolute left-0 right-0 top-full mt-1 bg-surface-container-lowest border border-outline-variant rounded shadow-lg z-30 max-h-48 overflow-y-auto">
+                  {customerResults.length === 0 ? (
+                    <div className="p-3 text-sm text-on-surface-variant text-center">Tidak ada pelanggan ditemukan</div>
+                  ) : customerResults.map(c => (
+                    <button
+                      key={c.id}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => { setSelectedCustomer(c); setCustomerSearch(''); setShowCustomerDropdown(false); }}
+                      className="w-full text-left px-3 py-2 hover:bg-surface-container-high transition-colors flex items-center gap-2 border-b border-outline-variant last:border-b-0"
+                    >
+                      <span className="material-symbols-outlined text-on-surface-variant text-sm">person</span>
+                      <div>
+                        <div className="font-table-data text-table-data text-sm font-semibold">{c.name}</div>
+                        <div className="text-xs text-on-surface-variant">{c.phone || 'No telp belum ada'} · {c.customerType}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
         {/* Cart Header */}
         <div className="flex justify-between items-center px-4 py-3 border-b border-outline-variant bg-surface-variant shrink-0">
