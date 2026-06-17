@@ -4,10 +4,14 @@ export const products = sqliteTable("products", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   sku: text("sku"),
+  barcode: text("barcode"), // Untuk Barcode Scanner
   category: text("category").notNull(),
+  unit: text("unit").notNull().default("Pcs"), // Satuan (Karung, Kg, Pcs, Liter)
   costPrice: real("cost_price").notNull(),
   sellingPrice: real("selling_price").notNull(),
-  stock: integer("stock").notNull(),
+  stock: real("stock").notNull(), // Diubah ke real agar bisa pecahan (misal 0.5 Karung)
+  parentProductId: integer("parent_product_id"), // Relasi ke produk grosir (jika ini barang eceran)
+  conversionQty: real("conversion_qty"), // Jumlah pengurang dari parent jika terjual
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   createdAt: text("created_at").notNull().$defaultFn(() => new Date().toISOString()),
 });

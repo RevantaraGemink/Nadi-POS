@@ -243,6 +243,13 @@ export default function Inventory() {
                     >
                       <span className="material-symbols-outlined">edit_square</span>
                     </button>
+                    <button
+                      onClick={() => handleDelete(product.id, product.name)}
+                      className="text-on-surface-variant hover:text-error transition-colors ml-2"
+                      title="Hapus Barang"
+                    >
+                      <span className="material-symbols-outlined">delete</span>
+                    </button>
                   </td>
                 </tr>
               );

@@ -1,6 +1,8 @@
 import { serve } from '@hono/node-server';
+import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { Parser } from 'json2csv';
 import { db } from './db';
 import { products, customers, transactions, transactionItems } from './db/schema';
 import { eq, desc, asc, sql, count, and, like, isNull } from 'drizzle-orm';
@@ -9,7 +11,8 @@ const app = new Hono();
 
 app.use('*', cors());
 
-app.get('/', (c) => {
+// Serve API health check
+app.get('/api', (c) => {
   return c.text('AgriPOS API is running!');
 });
 
@@ -91,7 +94,9 @@ app.get('/api/products', async (c) => {
     conditions.push(like(products.name, `${letter}%`));
   }
   if (search) {
-    conditions.push(like(products.name, `%${search}%`));
+    conditions.push(
+      sql`(${products.name} LIKE ${`%${search}%`} OR ${products.barcode} = ${search})`
+    );
   }
   const whereClause = and(...conditions);
 
@@ -282,10 +287,22 @@ app.post('/api/transactions', async (c) => {
           for (const item of body.items) {
             const product = tx.select().from(products).where(eq(products.id, item.productId)).get();
             if (product) {
-              tx.update(products)
-                .set({ stock: product.stock - item.quantity })
-                .where(eq(products.id, item.productId))
-                .run();
+              if (product.parentProductId && product.conversionQty) {
+                // Fitur Eceran: Kurangi stok produk grosir (parent)
+                const parentProduct = tx.select().from(products).where(eq(products.id, product.parentProductId)).get();
+                if (parentProduct) {
+                  tx.update(products)
+                    .set({ stock: parentProduct.stock - (item.quantity * product.conversionQty) })
+                    .where(eq(products.id, product.parentProductId))
+                    .run();
+                }
+              } else {
+                // Produk normal
+                tx.update(products)
+                  .set({ stock: product.stock - item.quantity })
+                  .where(eq(products.id, item.productId))
+                  .run();
+              }
             }
           }
         }
@@ -398,7 +415,14 @@ app.get('/api/reports/summary', async (c) => {
     const totalCredit = res[0].totalCredit || 0;
     const totalTx     = res[0].totalTx     || 0;
 
-    // Hitung COGS hanya untuk transaksi Penjualan dalam rentang
+    // 1. Hitung Total Penjualan Murni (Revenue)
+    const salesRes = await db.select({
+      totalSales: sql<number>`SUM(${transactions.debit})`
+    }).from(transactions)
+      .where(sql`${transactions.transactionType} LIKE 'Penjualan%' AND ${transactions.createdAt} >= ${startDate} AND ${transactions.createdAt} <= ${endDate}`);
+    const totalSales = salesRes[0].totalSales || 0;
+
+    // 2. Hitung COGS (Harga Modal Barang Terjual)
     const cogsRes = await db.select({
       totalCogs: sql<number>`SUM(${transactionItems.quantity} * ${products.costPrice})`
     })
@@ -406,9 +430,31 @@ app.get('/api/reports/summary', async (c) => {
     .innerJoin(products, eq(transactionItems.productId, products.id))
     .innerJoin(transactions, eq(transactionItems.transactionId, transactions.id))
     .where(sql`${transactions.transactionType} LIKE 'Penjualan%' AND ${transactions.createdAt} >= ${startDate} AND ${transactions.createdAt} <= ${endDate}`);
-
     const totalCogs  = cogsRes[0].totalCogs || 0;
-    const labaBersih = totalDebit - totalCogs - totalCredit;
+
+    // 3. Hitung Pengeluaran Operasional (Hanya tipe 'Operasional' dan bukan '[Stok]')
+    const opsExpenseRes = await db.select({
+      totalOpsExpense: sql<number>`SUM(${transactions.credit})`
+    }).from(transactions)
+      .where(sql`${transactions.transactionType} = 'Operasional' AND ${transactions.description} NOT LIKE '[Stok]%' AND ${transactions.createdAt} >= ${startDate} AND ${transactions.createdAt} <= ${endDate}`);
+    const totalOpsExpense = opsExpenseRes[0].totalOpsExpense || 0;
+
+    // 4. Hitung Produk Terjual dan Jumlah Transaksi Penjualan
+    const productsSoldRes = await db.select({
+      totalItems: sql<number>`SUM(${transactionItems.quantity})`
+    }).from(transactionItems)
+      .innerJoin(transactions, eq(transactionItems.transactionId, transactions.id))
+      .where(sql`${transactions.transactionType} LIKE 'Penjualan%' AND ${transactions.createdAt} >= ${startDate} AND ${transactions.createdAt} <= ${endDate}`);
+    const totalProductsSold = productsSoldRes[0].totalItems || 0;
+
+    const salesTxRes = await db.select({
+      totalSalesTx: sql<number>`COUNT(*)`
+    }).from(transactions)
+      .where(sql`${transactions.transactionType} LIKE 'Penjualan%' AND ${transactions.createdAt} >= ${startDate} AND ${transactions.createdAt} <= ${endDate}`);
+    const totalSalesTx = salesTxRes[0].totalSalesTx || 0;
+
+    // Laba Bersih yang akurat
+    const labaBersih = totalSales - totalCogs - totalOpsExpense;
 
     return c.json({
       period,
@@ -420,6 +466,8 @@ app.get('/api/reports/summary', async (c) => {
       totalCogs,
       labaBersih,
       totalTransaksi:   totalTx,
+      totalSalesTx,
+      totalProductsSold,
     });
   } catch (error) {
     console.error('REPORT ERROR:', error);
@@ -451,9 +499,93 @@ app.get('/api/reports/cashflow', async (c) => {
   });
 });
 
+// Endpoint: Export CSV Laporan Penjualan
+app.get('/api/reports/export-sales', async (c) => {
+  try {
+    const period = c.req.query('period') || 'semua';
+    const year   = c.req.query('year');
+    const { startDate, endDate } = getDateRange(period, year);
+
+    const data = await db.select({
+      id: transactions.id,
+      tanggal: transactions.createdAt,
+      tipe: transactions.transactionType,
+      keterangan: transactions.description,
+      pemasukan: transactions.debit,
+      pengeluaran: transactions.credit,
+    })
+    .from(transactions)
+    .where(sql`${transactions.createdAt} >= ${startDate} AND ${transactions.createdAt} <= ${endDate}`)
+    .orderBy(desc(transactions.createdAt));
+
+    const fields = ['id', 'tanggal', 'tipe', 'keterangan', 'pemasukan', 'pengeluaran'];
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(data);
+
+    c.header('Content-Type', 'text/csv');
+    c.header('Content-Disposition', `attachment; filename="Laporan_Penjualan_${period}.csv"`);
+    return c.text(csv);
+  } catch (error) {
+    console.error('EXPORT SALES ERROR:', error);
+    return c.json({ error: "Failed to export sales report" }, 500);
+  }
+});
+
+// Endpoint: Export CSV Laporan Sisa Stok
+app.get('/api/reports/export-stock', async (c) => {
+  try {
+    const data = await db.select({
+      sku: products.sku,
+      barcode: products.barcode,
+      nama: products.name,
+      kategori: products.category,
+      stok: products.stock,
+      satuan: products.unit,
+      harga_modal: products.costPrice,
+      harga_jual: products.sellingPrice,
+    })
+    .from(products)
+    .where(eq(products.isActive, true))
+    .orderBy(asc(products.name));
+
+    const fields = ['sku', 'barcode', 'nama', 'kategori', 'stok', 'satuan', 'harga_modal', 'harga_jual'];
+    const json2csvParser = new Parser({ fields });
+    const csv = json2csvParser.parse(data);
+
+    c.header('Content-Type', 'text/csv');
+    c.header('Content-Disposition', `attachment; filename="Laporan_Stok_${new Date().toISOString().split('T')[0]}.csv"`);
+    return c.text(csv);
+  } catch (error) {
+    console.error('EXPORT STOCK ERROR:', error);
+    return c.json({ error: "Failed to export stock report" }, 500);
+  }
+});
 
 
-const port = 3000;
+
+// ─── STATIC FRONTEND SERVING ──────────────────────────────────────────────────
+const fs = require('fs');
+const path = require('path');
+const publicDir = path.join(__dirname, 'public');
+
+// Serve frontend if it exists
+if (fs.existsSync(publicDir)) {
+  const relativeRoot = path.relative(process.cwd(), publicDir);
+  app.use('/*', serveStatic({ root: relativeRoot || '.' }));
+}
+
+// Fallback for SPA routing
+app.get('*', (c) => {
+  if (c.req.path.startsWith('/api/')) return c.json({ error: 'API route not found' }, 404);
+  try {
+    const html = fs.readFileSync(path.join(publicDir, 'index.html'), 'utf-8');
+    return c.html(html);
+  } catch (err) {
+    return c.text('Frontend not built yet.', 503);
+  }
+});
+
+const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 console.log(`Server is running on port ${port}`);
 
 serve({

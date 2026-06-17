@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+
+# Build Output
+dist/
+build/
+release/
+server/
+out/
+.vite/
+
+# Database Files (IMPORTANT: Never push real data)
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Env files (Secrets)
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Desktop App Generated files
+desktop-app/server/
+desktop-app/release/
+desktop-app/dist/
+desktop-app/node_modules/
+desktop-app/win-unpacked/
+
+# IDE files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

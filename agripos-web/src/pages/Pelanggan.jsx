@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchApi } from '../api';
 import { useState, useMemo } from 'react';
 
@@ -15,6 +15,24 @@ export default function Pelanggan() {
     queryKey: ['customers', page],
     queryFn: () => fetchApi(`/customers?page=${page}&limit=${limit}`)
   });
+
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => fetchApi(`/customers/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customers'] });
+    },
+    onError: (error) => {
+      alert(`Gagal menghapus pelanggan: ${error.message}`);
+    }
+  });
+
+  const handleDelete = (id, name) => {
+    if (window.confirm(`Apakah Anda yakin ingin menghapus pelanggan "${name}"? Data riwayat transaksinya akan tetap aman di laporan.`)) {
+      deleteMutation.mutate(id);
+    }
+  };
 
   const customers = data?.data || [];
   const meta = data?.meta || { total: 0, page: 1, totalPages: 1 };
@@ -160,6 +178,13 @@ export default function Pelanggan() {
                       title="Lihat Riwayat"
                     >
                       <span className="material-symbols-outlined text-[20px]">history</span>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(customer.id, customer.name)}
+                      className="text-error hover:text-error-container p-1 rounded hover:bg-surface-variant transition-colors ml-1"
+                      title="Hapus Pelanggan"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">delete</span>
                     </button>
                   </td>
                 </tr>

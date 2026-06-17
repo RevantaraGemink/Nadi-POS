@@ -91,7 +91,7 @@ export default function Laporan() {
     queryFn: () => fetchApi(`/reports/cashflow?${periodParam}&page=1&limit=9999`),
   });
 
-  const summary      = summaryData  || { totalPemasukan: 0, totalPengeluaran: 0, labaBersih: 0, totalTransaksi: 0 };
+  const summary      = summaryData  || { totalPemasukan: 0, totalPengeluaran: 0, labaBersih: 0, totalTransaksi: 0, totalSalesTx: 0, totalProductsSold: 0 };
   const transactions = cashflowData?.data || [];
   const allTransactions = allCashflowData?.data || [];
   const meta         = cashflowData?.meta || { total: 0, totalPages: 1, page: 1 };
@@ -101,9 +101,10 @@ export default function Laporan() {
 
   const formatTime = (iso) => {
     if (!iso) return '';
-    return new Date(iso).toLocaleTimeString('id-ID', {
-      hour: '2-digit', minute: '2-digit'
-    });
+    const d = new Date(iso);
+    const dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' });
+    const timeStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    return `${dateStr}, ${timeStr}`;
   };
 
   const periodLabel = useMemo(() => {
@@ -156,8 +157,12 @@ export default function Laporan() {
     ? Math.max(0, Math.min(100, (summary.labaBersih / summary.totalPemasukan) * 100))
     : 0;
 
-  const avgPerTransaction = summary.totalTransaksi > 0
-    ? summary.totalPemasukan / summary.totalTransaksi
+  const avgPerTransaction = summary.totalSalesTx > 0
+    ? summary.totalPemasukan / summary.totalSalesTx
+    : 0;
+    
+  const avgProductsPerTx = summary.totalSalesTx > 0
+    ? (summary.totalProductsSold / summary.totalSalesTx).toFixed(1)
     : 0;
 
   const expensePct = summary.totalPemasukan > 0
@@ -186,11 +191,11 @@ export default function Laporan() {
       const doc = new jsPDF();
 
       doc.setFontSize(22);
-      doc.setTextColor(1, 45, 29);
-      doc.text('AgriPOS - Laporan Keuangan', 14, 20);
+      doc.setFontSize(16);
+      doc.text('Nadi - Laporan Keuangan', 14, 20);
 
       doc.setFontSize(10);
-      doc.setTextColor(100);
+      doc.setTextColor(0);
       doc.text(`Periode: ${pLabel}`, 14, 28);
       doc.text(`Dicetak: ${new Date().toLocaleString('id-ID')}`, 14, 34);
 
@@ -208,8 +213,8 @@ export default function Laporan() {
           ['Laba Bersih',      formatCurrency(s.labaBersih)],
         ],
         theme: 'grid',
-        headStyles: { fillColor: [1, 45, 29] },
-        styles: { fontSize: 11, cellPadding: 4 },
+        headStyles: { fillColor: [1, 45, 29], textColor: [255, 255, 255] },
+        styles: { fontSize: 11, cellPadding: 4, textColor: [0, 0, 0] },
       });
 
       const y1 = doc.lastAutoTable.finalY;
@@ -219,19 +224,25 @@ export default function Laporan() {
       autoTable(doc, {
         startY: y1 + 17,
         head: [['Waktu', 'Keterangan', 'Kategori', 'Debit', 'Kredit']],
-        body: pdfTx.map(tx => [
-          new Date(tx.createdAt).toLocaleDateString('id-ID'),
-          tx.description,
-          tx.transactionType,
-          tx.debit  > 0 ? formatCurrency(tx.debit)  : '-',
-          tx.credit > 0 ? formatCurrency(tx.credit) : '-',
-        ]),
+        body: pdfTx.map(tx => {
+          const d = new Date(tx.createdAt);
+          const dateStr = d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+          const timeStr = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+          return [
+            `${dateStr} ${timeStr}`,
+            tx.description,
+            tx.transactionType,
+            tx.debit  > 0 ? formatCurrency(tx.debit)  : '-',
+            tx.credit > 0 ? formatCurrency(tx.credit) : '-',
+          ];
+        }),
         theme: 'striped',
-        headStyles: { fillColor: [1, 45, 29] },
-        styles: { fontSize: 9 },
+        headStyles: { fillColor: [1, 45, 29], textColor: [255, 255, 255] },
+        styles: { fontSize: 9, textColor: [0, 0, 0] },
       });
 
-      doc.save(`Laporan_AgriPOS_${pLabel.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
+      // Save PDF
+      doc.save(`Laporan_Nadi_${pLabel.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (err) {
       alert('Gagal mengunduh PDF: ' + err.message);
     } finally {
@@ -303,7 +314,7 @@ export default function Laporan() {
                 <span className="material-symbols-outlined text-primary">trending_up</span>
               </div>
               <h2 className="text-[28px] font-bold text-primary">{formatCurrency(summary.totalPemasukan)}</h2>
-              <p className="text-xs text-on-surface-variant">+12.5% dari bulan lalu</p>
+              <p className="text-xs text-on-surface-variant">Periode {periodLabel}</p>
             </div>
 
             {/* Total Pengeluaran */}
@@ -341,11 +352,11 @@ export default function Laporan() {
             </div>
             <div>
               <p className="font-table-data text-table-data text-on-surface-variant text-sm">Produk Terjual</p>
-              <p className="text-xl font-semibold text-on-surface">—</p>
+              <p className="text-xl font-semibold text-on-surface">{summary.totalProductsSold} item</p>
             </div>
             <div>
               <p className="font-table-data text-table-data text-on-surface-variant text-sm">Produk per Transaksi</p>
-              <p className="text-xl font-semibold text-on-surface">—</p>
+              <p className="text-xl font-semibold text-on-surface">{avgProductsPerTx} item</p>
             </div>
           </div>
         </div>
@@ -363,13 +374,22 @@ export default function Laporan() {
           <div className="lg:col-span-2 bg-surface-container-lowest border border-outline-variant rounded-DEFAULT overflow-hidden flex flex-col">
             <div className="p-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
               <h3 className="font-table-data text-table-data text-on-surface font-bold">Arus Kas (Cash Flow)</h3>
-              <button
-                onClick={() => setLocation('/laporan/input')}
-                className="flex items-center gap-2 border-2 border-primary text-primary px-3 py-1.5 rounded-DEFAULT font-table-data text-table-data hover:bg-surface-container-high transition-colors"
-              >
-                <span className="material-symbols-outlined text-[18px]">add</span>
-                Input Pengeluaran
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setLocation('/laporan/input-pemasukan')}
+                  className="flex items-center gap-1.5 border-2 border-[#00c99a] text-[#00c99a] px-3 py-1.5 rounded-DEFAULT font-table-data text-table-data hover:bg-[#00c99a]/10 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add</span>
+                  Input Pemasukan
+                </button>
+                <button
+                  onClick={() => setLocation('/laporan/input')}
+                  className="flex items-center gap-1.5 border-2 border-primary text-primary px-3 py-1.5 rounded-DEFAULT font-table-data text-table-data hover:bg-surface-container-high transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[18px]">remove</span>
+                  Input Pengeluaran
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">

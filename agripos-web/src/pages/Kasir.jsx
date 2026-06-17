@@ -2,6 +2,7 @@ import { useLocation } from "wouter";
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchApi } from '../api';
+import { useBarcodeScanner } from '../utils/useBarcodeScanner';
 
 
 
@@ -83,6 +84,17 @@ export default function Kasir() {
   });
 
   const products = productsData?.data || [];
+
+  // Gunakan fitur Barcode Scanner
+  useBarcodeScanner((barcode) => {
+    if (!products || products.length === 0) return;
+    const product = products.find(p => p.barcode === barcode);
+    if (product) {
+      addToCart(product);
+    } else {
+      alert(`Produk dengan barcode ${barcode} tidak ditemukan!`);
+    }
+  });
   const filteredProducts = useMemo(() => {
     let list = products.filter(p => {
       const matchCategory = filterCategory === 'Semua' || p.category === filterCategory;

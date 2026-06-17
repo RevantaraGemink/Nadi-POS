@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Manajemen Inventory - Variasi Filter</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#c1c8c2",
+                        "error": "#ba1a1a",
+                        "primary": "#012d1d",
+                        "tertiary-fixed": "#dbe5df",
+                        "primary-fixed": "#c1ecd4",
+                        "on-primary-container": "#86af99",
+                        "on-tertiary-fixed-variant": "#3f4945",
+                        "secondary": "#1f6d1a",
+                        "secondary-container": "#a4f792",
+                        "surface-container": "#ececff",
+                        "on-tertiary-fixed": "#151d1a",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed-dim": "#bfc9c3",
+                        "primary-fixed-dim": "#a5d0b9",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#274e3d",
+                        "primary-container": "#1b4332",
+                        "on-secondary-fixed": "#002201",
+                        "background": "#fbf8ff",
+                        "inverse-primary": "#a5d0b9",
+                        "tertiary": "#1f2825",
+                        "surface-container-low": "#f4f2ff",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#002114",
+                        "surface-container-high": "#e5e6ff",
+                        "on-background": "#161a32",
+                        "outline": "#717973",
+                        "inverse-surface": "#2b2f48",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#414844",
+                        "secondary-fixed-dim": "#89da79",
+                        "surface-container-highest": "#dee0ff",
+                        "on-surface": "#161a32",
+                        "surface-bright": "#fbf8ff",
+                        "secondary-fixed": "#a4f792",
+                        "on-secondary-container": "#267320",
+                        "on-tertiary-container": "#9fa9a3",
+                        "surface": "#fbf8ff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed-variant": "#005303",
+                        "inverse-on-surface": "#f0efff",
+                        "surface-tint": "#3f6653",
+                        "surface-dim": "#d5d8f9",
+                        "on-tertiary": "#ffffff",
+                        "surface-variant": "#dee0ff",
+                        "tertiary-container": "#353e3a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "input-height": "40px",
+                        "gutter": "16px",
+                        "margin-page": "24px",
+                        "table-cell-padding": "12px 16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["IBM Plex Sans"],
+                        "label-caps": ["JetBrains Mono"],
+                        "body-lg": ["IBM Plex Sans"],
+                        "headline-lg": ["IBM Plex Sans"],
+                        "headline-md": ["IBM Plex Sans"],
+                        "table-data": ["IBM Plex Sans"],
+                        "status-label": ["IBM Plex Sans"]
+                    }
+                },
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'IBM Plex Sans', sans-serif; background-color: #fbf8ff; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .status-available { border-left: 4px solid #1f6d1a; background-color: #f0fff0; }
+        .status-low { border-left: 4px solid #d97706; background-color: #fffbeb; }
+        .status-empty { border-left: 4px solid #ba1a1a; background-color: #fef2f2; }
+        .mono-data { font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body class="text-on-surface">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background group/design-root overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Shared TopAppBar Navigation -->
+<div class="px-4 md:px-10 lg:px-40 flex flex-1 justify-center py-5">
+<div class="layout-content-container flex flex-col max-w-[1200px] flex-1">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-outline-variant px-4 py-3 bg-surface-container-lowest rounded-t-lg">
+<div class="flex items-center gap-4 lg:gap-8 flex-1">
+<div class="flex items-center gap-4 text-primary">
+<div class="size-6"><img alt="Nadi Logo" class="h-full w-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmPtD7p216zK2qXSvn74bFW9Z4RDdiMaxqZX30lqogvoA80lz-4c7iZ6jPTlaXa7Zd6vKW1j9e2NeDI-mEmBFdmlFI5qQKgKY0MaL10-kM9DQm4Ne7u0odKlYhaN6MI1BAGqkEbsO3RwTr-Oa84JWb79_A8pIIiIYLjl-XbXfXwlhEE3Ha11PBGUjJ5DHg83Ni4tL73_3zkvswofEw7HAF63m6HPFHyIbdZlZAVKaEF7uvuaqHtfBFGHpvhPiCx1K5hz2zO48R7CAY"/></div>
+<h2 class="text-on-surface text-lg font-bold leading-tight tracking-tight font-headline-md">Nadi Inventory</h2>
+</div>
+<label class="hidden md:flex flex-col min-w-40 h-10 max-w-80 flex-1">
+<div class="flex w-full flex-1 items-stretch rounded h-full">
+<div class="text-on-surface-variant flex border border-r-0 border-outline-variant bg-surface-container-low items-center justify-center pl-4 rounded-l" data-icon="search">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 border border-l-0 border-outline-variant bg-surface-container-low text-on-surface focus:ring-0 focus:border-primary h-full placeholder:text-on-surface-variant px-4 rounded-r text-sm font-normal" placeholder="Cari SKU atau nama barang..."/>
+</div>
+</label><div class="flex items-center gap-2 h-10">
+<span class="text-xs text-on-surface-variant font-medium">Urutkan:</span>
+<div class="relative h-full">
+<select class="form-select h-full bg-surface-container-low border-outline-variant text-sm rounded py-1 pl-3 pr-10 focus:ring-1 focus:ring-primary focus:border-primary text-on-surface cursor-pointer appearance-none">
+<option value="az">Nama (A-Z)</option>
+<option value="za">Nama (Z-A)</option>
+<option value="stok_low">Stok Terendah</option>
+<option value="stok_high">Stok Tertinggi</option>
+</select>
+</div>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded h-10 w-10 bg-surface-container-high text-on-surface">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex items-center justify-center rounded h-10 w-10 bg-surface-container-high text-on-surface">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</header>
+<div class="flex flex-col md:flex-row h-full min-h-[800px] bg-surface-container-lowest border-x border-b border-outline-variant rounded-b-lg">
+<!-- Left Navigation Sidebar -->
+<aside class="w-full md:w-64 border-r border-outline-variant p-4 flex flex-col gap-2">
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined">dashboard</span>
+<p class="text-sm font-medium">Dashboard</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 bg-primary text-on-primary rounded-lg">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<p class="text-sm font-medium">Inventory</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined">shopping_cart</span>
+<p class="text-sm font-medium">Transaksi</p>
+</div>
+<div class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined">analytics</span>
+<p class="text-sm font-medium">Laporan</p>
+</div>
+<div class="mt-auto pt-4 border-t border-outline-variant">
+<div class="flex items-center gap-3 px-3 py-2 text-error hover:bg-error-container rounded-lg transition-colors">
+<span class="material-symbols-outlined">logout</span>
+<p class="text-sm font-medium">Keluar</p>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col">
+<!-- Page Header -->
+<div class="flex flex-wrap justify-between items-end gap-4 p-6 border-b border-outline-variant bg-surface-container-lowest">
+<div class="flex flex-col gap-1">
+<h1 class="text-on-surface text-2xl font-bold tracking-tight font-headline-md">Manajemen Stok</h1>
+<p class="text-on-surface-variant text-sm">Update inventaris produk pertanian Anda secara real-time.</p>
+</div>
+<button class="flex items-center justify-center gap-2 px-6 rounded-lg h-12 bg-primary text-on-primary text-sm font-bold shadow-sm hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined">add</span>
+<span>Tambah Barang Baru</span>
+</button>
+</div>
+<!-- Filters & Search -->
+<div class="flex flex-wrap items-center gap-3 p-4 bg-surface-container-low border-b border-outline-variant">
+<span class="text-label-caps text-on-surface-variant uppercase text-xs font-bold pl-2">Filter Kategori:</span>
+<button class="flex items-center justify-center gap-2 px-4 py-2 rounded border border-primary bg-primary text-on-primary text-xs font-bold">
+                                    Semua
+                                </button>
+<button class="flex items-center justify-center gap-2 px-4 py-2 rounded border border-outline bg-surface-container-lowest text-on-surface text-xs font-bold hover:bg-surface-container">
+                                    Benih
+                                </button>
+<button class="flex items-center justify-center gap-2 px-4 py-2 rounded border border-outline bg-surface-container-lowest text-on-surface text-xs font-bold hover:bg-surface-container">
+                                    Pupuk Cair
+                                </button>
+<button class="flex items-center justify-center gap-2 px-4 py-2 rounded border border-outline bg-surface-container-lowest text-on-surface text-xs font-bold hover:bg-surface-container">
+                                    Pupuk Padat
+                                </button>
+<button class="flex items-center justify-center gap-2 px-4 py-2 rounded border border-outline bg-surface-container-lowest text-on-surface text-xs font-bold hover:bg-surface-container">
+                                    Alat Semprot
+                                </button>
+<div class="ml-auto flex items-center gap-2">
+<span class="text-xs text-on-surface-variant">Tampilkan:</span>
+<select class="form-select bg-surface-container-lowest border-outline-variant text-xs rounded py-1 pl-2 pr-8 focus:ring-0">
+<option>25 Baris</option>
+<option>50 Baris</option>
+<option>100 Baris</option>
+</select>
+</div>
+</div>
+<!-- Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full border-collapse">
+<thead class="bg-surface-container sticky top-0 z-10">
+<tr class="text-left border-b border-outline-variant">
+<th class="px-4 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-caps">Nama Produk</th>
+<th class="px-4 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-caps text-center">Kategori</th>
+<th class="px-4 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-caps text-right">Harga Pokok</th>
+<th class="px-4 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-caps text-right">Harga Jual</th>
+<th class="px-4 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-caps text-center">Stok</th>
+<th class="px-4 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-caps text-center">Status</th>
+<th class="px-4 py-4 text-xs font-bold uppercase tracking-wider text-on-surface-variant font-label-caps text-center">Aksi</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant">
+<!-- Item 1 -->
+<tr class="hover:bg-surface-container-low transition-colors status-available">
+<td class="px-4 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">eco</span>
+</div>
+<div>
+<p class="font-bold text-sm text-on-surface">Benih Padi Ciherang 5kg</p>
+<p class="text-xs text-on-surface-variant font-label-caps">SKU: AG-BNH-001</p>
+</div>
+</div>
+</td>
+<td class="px-4 py-4 text-center">
+<span class="px-2 py-1 rounded-sm bg-surface-container text-[10px] font-bold uppercase border border-outline-variant">Benih</span>
+</td>
+<td class="px-4 py-4 text-right mono-data text-sm">Rp 75.000</td>
+<td class="px-4 py-4 text-right mono-data text-sm font-bold">Rp 92.500</td>
+<td class="px-4 py-4 text-center mono-data text-sm font-bold">142</td>
+<td class="px-4 py-4 text-center">
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded bg-secondary text-on-secondary text-[11px] font-bold uppercase">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                                    Tersedia
+                                                </span>
+</td>
+<td class="px-4 py-4 text-center">
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">edit_square</span></button>
+</td>
+</tr>
+<!-- Item 2 -->
+<tr class="hover:bg-surface-container-low transition-colors status-low">
+<td class="px-4 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">water_drop</span>
+</div>
+<div>
+<p class="font-bold text-sm text-on-surface">Pupuk Cair Organik Plus 1L</p>
+<p class="text-xs text-on-surface-variant font-label-caps">SKU: AG-PPK-042</p>
+</div>
+</div>
+</td>
+<td class="px-4 py-4 text-center">
+<span class="px-2 py-1 rounded-sm bg-surface-container text-[10px] font-bold uppercase border border-outline-variant">Pupuk Cair</span>
+</td>
+<td class="px-4 py-4 text-right mono-data text-sm">Rp 42.000</td>
+<td class="px-4 py-4 text-right mono-data text-sm font-bold">Rp 55.000</td>
+<td class="px-4 py-4 text-center mono-data text-sm font-bold">8</td>
+<td class="px-4 py-4 text-center">
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded bg-[#d97706] text-white text-[11px] font-bold uppercase">
+<span class="material-symbols-outlined text-[14px]">warning</span>
+                                                    Hampir Habis
+                                                </span>
+</td>
+<td class="px-4 py-4 text-center">
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">edit_square</span></button>
+</td>
+</tr>
+<!-- Item 3 -->
+<tr class="hover:bg-surface-container-low transition-colors status-empty">
+<td class="px-4 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">precision_manufacturing</span>
+</div>
+<div>
+<p class="font-bold text-sm text-on-surface">Sprayer Elektrik 16L Pro</p>
+<p class="text-xs text-on-surface-variant font-label-caps">SKU: AG-ALT-009</p>
+</div>
+</div>
+</td>
+<td class="px-4 py-4 text-center">
+<span class="px-2 py-1 rounded-sm bg-surface-container text-[10px] font-bold uppercase border border-outline-variant">Alat Semprot</span>
+</td>
+<td class="px-4 py-4 text-right mono-data text-sm">Rp 380.000</td>
+<td class="px-4 py-4 text-right mono-data text-sm font-bold">Rp 475.000</td>
+<td class="px-4 py-4 text-center mono-data text-sm font-bold text-error">0</td>
+<td class="px-4 py-4 text-center">
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded bg-error text-on-error text-[11px] font-bold uppercase">
+<span class="material-symbols-outlined text-[14px]">cancel</span>
+                                                    Kosong
+                                                </span>
+</td>
+<td class="px-4 py-4 text-center">
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">edit_square</span></button>
+</td>
+</tr>
+<!-- Item 4 -->
+<tr class="hover:bg-surface-container-low transition-colors status-available">
+<td class="px-4 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">layers</span>
+</div>
+<div>
+<p class="font-bold text-sm text-on-surface">Pupuk Urea Subsidi 50kg</p>
+<p class="text-xs text-on-surface-variant font-label-caps">SKU: AG-PPK-011</p>
+</div>
+</div>
+</td>
+<td class="px-4 py-4 text-center">
+<span class="px-2 py-1 rounded-sm bg-surface-container text-[10px] font-bold uppercase border border-outline-variant">Pupuk Padat</span>
+</td>
+<td class="px-4 py-4 text-right mono-data text-sm">Rp 112.500</td>
+<td class="px-4 py-4 text-right mono-data text-sm font-bold">Rp 130.000</td>
+<td class="px-4 py-4 text-center mono-data text-sm font-bold">54</td>
+<td class="px-4 py-4 text-center">
+<span class="inline-flex items-center gap-1 px-3 py-1 rounded bg-secondary text-on-secondary text-[11px] font-bold uppercase">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                                    Tersedia
+                                                </span>
+</td>
+<td class="px-4 py-4 text-center">
+<button class="text-on-surface-variant hover:text-primary"><span class="material-symbols-outlined">edit_square</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="mt-auto flex items-center justify-between p-4 bg-surface-container-low border-t border-outline-variant">
+<p class="text-xs text-on-surface-variant">Menampilkan 1 - 4 dari 128 produk</p>
+<div class="flex gap-1">
+<button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-primary bg-primary text-on-primary text-xs font-bold transition-colors">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant bg-surface-container-lowest text-on-surface text-xs font-bold hover:bg-surface-container transition-colors">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant bg-surface-container-lowest text-on-surface text-xs font-bold hover:bg-surface-container transition-colors">3</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+<!-- Footer Details -->
+<footer class="flex items-center justify-between p-4 bg-surface-container text-on-surface-variant border-t border-outline-variant rounded-b-lg">
+<div class="flex gap-6">
+<div class="flex flex-col">
+<span class="text-[10px] font-bold uppercase font-label-caps">Total Nilai Inventory</span>
+<span class="text-sm font-bold text-on-surface mono-data">Rp 128.450.000</span>
+</div>
+<div class="flex flex-col border-l border-outline-variant pl-6">
+<span class="text-[10px] font-bold uppercase font-label-caps">Item Hampir Habis</span>
+<span class="text-sm font-bold text-[#d97706] mono-data">12 Kategori</span>
+</div>
+</div>
+<p class="text-[10px] font-medium italic">Sinkronisasi terakhir: 2 menit yang lalu</p>
+</footer>
+</div>
+</div>
+</div>
+</div>
+<!-- Background Decoration Image -->
+<div class="fixed bottom-0 right-0 -z-10 opacity-5 pointer-events-none p-10">
+<img class="w-96 grayscale" data-alt="A detailed digital illustration of industrial farming technology with a tractor silhouette and geometric circuit patterns overlaid on a soft green background. The style is modern corporate with clean lines and technical precision, evoking a sense of high-tech agricultural efficiency. The atmosphere is professional and stable, consistent with a management software environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnmGazrWu1iwG-CJ8pn6pGQy_fnwX87SMIU-dRDoLyxa9wHRuXdR5rqlnLzgK_5frOf8A09DVstDDxRz5UqScUiFwRPWPW8Mb4bXDkvooNlfWPDshgNBWSOaWVadTaSIR_u1Tx3rYSiR5Yh8n_O83KwGMd5JLPVNd0ZLS-p6tDML-FwIHfMCMbdpMX2OjxLgach8yUwruHV1vI2zJFL0aPaw_K92_FCACVTCK6EmUPUAJRAhE4_v2OVWiCeVx32ojwnaXTS1zejgVi"/>
+</div>
+</body></html>

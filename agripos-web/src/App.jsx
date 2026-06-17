@@ -9,6 +9,7 @@ import RestokBarang from "./pages/RestokBarang";
 import PratinjauStruk from "./pages/PratinjauStruk";
 import DetailRiwayatPelanggan from "./pages/DetailRiwayatPelanggan";
 import InputPengeluaran from "./pages/InputPengeluaran";
+import InputPemasukan from "./pages/InputPemasukan";
 import TambahPelanggan from "./pages/TambahPelanggan";
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
         <Route path="/pelanggan/:id/detail" component={DetailRiwayatPelanggan} />
         <Route path="/laporan" component={Laporan} />
         <Route path="/laporan/input" component={InputPengeluaran} />
+        <Route path="/laporan/input-pemasukan" component={InputPemasukan} />
       </Switch>
     </Layout>
   );

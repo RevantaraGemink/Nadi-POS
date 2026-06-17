@@ -17,15 +17,10 @@ export default function Layout({ children }) {
 
   return (
     <>
-      <nav className="bg-surface border-r border-outline-variant docked left-0 h-full w-64 flex flex-col gap-unit p-4 shrink-0 z-20">
-        <div className="mb-8 px-2 flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-on-primary-container">
-            <span className="material-symbols-outlined">agriculture</span>
-          </div>
-          <div>
-            <div className="font-headline-md text-headline-md font-bold text-primary">AgriPOS</div>
-            <div className="font-label-caps text-label-caps text-on-surface-variant">Agri Retail Management</div>
-          </div>
+      <nav className="bg-surface border-r border-outline-variant docked left-0 h-full w-64 flex flex-col gap-unit p-4 shrink-0 z-20 print:hidden">
+        <div className="flex items-center gap-3 px-2 mb-8 mt-2">
+          <img src="/logo.jpg" alt="Logo Nadi" className="h-20 w-20 rounded-full object-cover shadow-sm" />
+          <div className="font-headline-md text-headline-md font-bold text-primary tracking-tight">Nadi</div>
         </div>
         <div className="flex flex-col gap-2 flex-grow">
           <NavLink href="/" icon="point_of_sale" label="Kasir" isActive={isKasir} />
@@ -35,8 +30,8 @@ export default function Layout({ children }) {
         </div>
       </nav>
 
-      <div className="flex flex-col flex-grow h-full w-full bg-surface-container-lowest">
-        <header className="bg-surface-container-lowest border-b border-outline-variant docked full-width top-0 flex justify-between items-center w-full px-margin-page h-input-height shrink-0 z-10 py-4 h-16">
+      <div className="flex flex-col flex-grow h-full print:h-auto w-full bg-surface-container-lowest print:block">
+        <header className="bg-surface-container-lowest border-b border-outline-variant docked full-width top-0 flex justify-between items-center w-full px-margin-page h-input-height shrink-0 z-10 py-4 h-16 print:hidden">
           <div className="flex-1 max-w-xl flex items-center gap-4">
             <div className="relative w-full">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
@@ -62,7 +57,7 @@ export default function Layout({ children }) {
           </div>
         </header>
 
-        <main className="flex-grow flex overflow-hidden">
+        <main className="flex-grow flex overflow-hidden print:overflow-visible print:block">
           {children}
         </main>
       </div>
