@@ -218,9 +218,9 @@ export default function Kasir() {
   }, [products]);
 
   return (
-    <div className="flex flex-col lg:flex-row h-full w-full overflow-y-auto lg:overflow-hidden">
+    <>
       {/* Left Panel: Product Grid & Search Results (Fluid) */}
-      <div className="flex-1 flex flex-col border-b lg:border-b-0 lg:border-r border-outline-variant bg-surface-container-lowest lg:overflow-hidden min-h-[500px]">
+      <div className="flex-1 flex flex-col border-r border-outline-variant bg-surface-container-lowest overflow-hidden">
         {/* Top Bar: Search + Sort */}
         <div className="px-4 pt-3 pb-2 border-b border-outline-variant bg-surface-container-lowest shrink-0 flex gap-2">
           <div className="relative flex-1">
@@ -297,8 +297,8 @@ export default function Kasir() {
           ))}
         </div>
       </div>
-      {/* Right Panel: Cart & Checkout (Fixed Width on Desktop) */}
-      <div className="w-full lg:w-[400px] flex flex-col bg-surface shrink-0 min-h-[600px] lg:h-full relative lg:border-l border-outline-variant">
+      {/* Right Panel: Cart & Checkout (Fixed Width) */}
+      <div className="w-[400px] flex flex-col bg-surface shrink-0 h-full relative border-l border-outline-variant">
         {showCalc && <Calculator onClose={() => setShowCalc(false)} />}
         
         {/* Customer Panel */}
@@ -445,6 +445,6 @@ export default function Kasir() {
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
