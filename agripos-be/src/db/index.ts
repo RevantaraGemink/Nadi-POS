@@ -55,5 +55,9 @@ CREATE TABLE IF NOT EXISTS transaction_items (
 );
 `);
 
-export const db = drizzle(sqlite, { schema });
+// Safe migrations for older databases that don't have the new columns
+try { sqlite.exec("ALTER TABLE products ADD COLUMN barcode text;"); } catch (e) { /* Column likely exists */ }
+try { sqlite.exec("ALTER TABLE products ADD COLUMN parent_product_id integer;"); } catch (e) { /* Column likely exists */ }
+try { sqlite.exec("ALTER TABLE products ADD COLUMN conversion_qty real;"); } catch (e) { /* Column likely exists */ }
 
+export const db = drizzle(sqlite, { schema });
