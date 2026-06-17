@@ -56,8 +56,30 @@ CREATE TABLE IF NOT EXISTS transaction_items (
 `);
 
 // Safe migrations for older databases that don't have the new columns
-try { sqlite.exec("ALTER TABLE products ADD COLUMN barcode text;"); } catch (e) { /* Column likely exists */ }
-try { sqlite.exec("ALTER TABLE products ADD COLUMN parent_product_id integer;"); } catch (e) { /* Column likely exists */ }
-try { sqlite.exec("ALTER TABLE products ADD COLUMN conversion_qty real;"); } catch (e) { /* Column likely exists */ }
+const migrations = [
+  "ALTER TABLE products ADD COLUMN sku text;",
+  "ALTER TABLE products ADD COLUMN barcode text;",
+  "ALTER TABLE products ADD COLUMN unit text DEFAULT 'Pcs' NOT NULL;",
+  "ALTER TABLE products ADD COLUMN parent_product_id integer;",
+  "ALTER TABLE products ADD COLUMN conversion_qty real;",
+  "ALTER TABLE products ADD COLUMN is_active integer DEFAULT 1 NOT NULL;",
+  "ALTER TABLE products ADD COLUMN created_at text DEFAULT CURRENT_TIMESTAMP NOT NULL;",
+  
+  "ALTER TABLE customers ADD COLUMN phone text;",
+  "ALTER TABLE customers ADD COLUMN address text;",
+  "ALTER TABLE customers ADD COLUMN customer_type text DEFAULT 'Umum' NOT NULL;",
+  "ALTER TABLE customers ADD COLUMN created_at text DEFAULT CURRENT_TIMESTAMP NOT NULL;",
+  
+  "ALTER TABLE transactions ADD COLUMN debit real DEFAULT 0 NOT NULL;",
+  "ALTER TABLE transactions ADD COLUMN credit real DEFAULT 0 NOT NULL;",
+  "ALTER TABLE transactions ADD COLUMN customer_id integer;",
+  "ALTER TABLE transactions ADD COLUMN created_at text DEFAULT CURRENT_TIMESTAMP NOT NULL;",
+  
+  "ALTER TABLE transaction_items ADD COLUMN discount real DEFAULT 0;"
+];
+
+for (const query of migrations) {
+  try { sqlite.exec(query); } catch (e) { /* Column likely exists */ }
+}
 
 export const db = drizzle(sqlite, { schema });
