@@ -298,7 +298,7 @@ export default function Kasir() {
         </div>
       </div>
       {/* Right Panel: Cart & Checkout (Fixed Width) */}
-      <div className="w-[400px] flex flex-col bg-surface shrink-0 h-full relative border-l border-outline-variant">
+      <div className="w-[280px] xl:w-[400px] flex flex-col bg-surface shrink-0 h-full relative border-l border-outline-variant">
         {showCalc && <Calculator onClose={() => setShowCalc(false)} />}
         
         {/* Customer Panel */}
